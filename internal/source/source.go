@@ -17,6 +17,7 @@ type Span struct {
 	End      Position
 }
 
+// String formats the span's starting location as file:line:column.
 func (s Span) String() string {
 	return fmt.Sprintf("%s:%d:%d", s.Filename, s.Start.Line, s.Start.Column)
 }

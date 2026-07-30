@@ -159,3 +159,30 @@ func TestRuntimeFailuresAgree(t *testing.T) {
 		})
 	}
 }
+
+func TestSourceAnalyzerFallbackIsCurrent(t *testing.T) {
+	root := filepath.Join("..", "..", "examples")
+	source, err := os.ReadFile(filepath.Join(root, "source-analyzer.zing"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	program, diagnostics := parser.Parse("examples/source-analyzer.zing", source)
+	if len(diagnostics) != 0 {
+		t.Fatalf("parse: %v", diagnostics)
+	}
+	info, diagnostics := checker.Check(program)
+	if len(diagnostics) != 0 {
+		t.Fatalf("check: %v", diagnostics)
+	}
+	generated, err := compiler.Generate(program, info)
+	if err != nil {
+		t.Fatal(err)
+	}
+	fallback, err := os.ReadFile(filepath.Join(root, "generated", "source-analyzer.go"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !bytes.Equal(generated, fallback) {
+		t.Fatal("checked-in source analyzer fallback is stale; regenerate it with zing-compiler")
+	}
+}

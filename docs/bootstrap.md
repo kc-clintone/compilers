@@ -3,7 +3,7 @@
 | Future compiler need | Zing v1 capability |
 | --- | --- |
 | Read source and arguments | `args`, `readFile` |
-| Scan bytes | `char`, string indexing/slicing, loops |
+| Lex bytes | `char`, string indexing/slicing, loops |
 | Store tokens and AST nodes | structs and slices |
 | Symbol tables | maps |
 | Recursive parsing and checking | typed recursive functions |

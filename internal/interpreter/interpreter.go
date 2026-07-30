@@ -22,7 +22,10 @@ type FileSystem interface {
 
 type osFileSystem struct{}
 
+// ReadFile delegates to the operating-system filesystem.
 func (osFileSystem) ReadFile(name string) ([]byte, error) { return os.ReadFile(name) }
+
+// WriteFile delegates to the operating-system filesystem.
 func (osFileSystem) WriteFile(name string, data []byte, mode os.FileMode) error {
 	return os.WriteFile(name, data, mode)
 }

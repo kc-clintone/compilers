@@ -122,7 +122,7 @@ type Func struct {
 type Struct struct {
 	Name   string
 	Decl   *ast.StructDecl
-	Fields map[string]Type
+	fields map[string]Type
 }
 
 // Info is immutable semantic information consumed by both back ends.
@@ -257,7 +257,7 @@ func (c *Checker) declare(p *ast.Program) {
 			if _, exists := c.info.structs[s.Name]; exists {
 				c.err(s, "duplicate type "+s.Name)
 			} else {
-				c.info.structs[s.Name] = &Struct{Name: s.Name, Decl: s, Fields: map[string]Type{}}
+				c.info.structs[s.Name] = &Struct{Name: s.Name, Decl: s, fields: map[string]Type{}}
 			}
 		}
 	}
@@ -326,10 +326,10 @@ func (c *Checker) defineStructs(p *ast.Program) {
 				if f.Name == "main" {
 					c.errSpan(f.Span, "reserved name main")
 				}
-				if _, exists := s.Fields[f.Name]; exists {
+				if _, exists := s.fields[f.Name]; exists {
 					c.errSpan(f.Span, "duplicate field "+f.Name)
 				} else {
-					s.Fields[f.Name] = c.resolveType(f.Type)
+					s.fields[f.Name] = c.resolveType(f.Type)
 				}
 			}
 		}
@@ -550,7 +550,7 @@ func (c *Checker) expr(e ast.Expr) Type {
 			t = Invalid
 		} else if s := c.info.structs[o.Name]; s == nil {
 			t = Invalid
-		} else if ft, ok := s.Fields[x.Name]; ok {
+		} else if ft, ok := s.fields[x.Name]; ok {
 			t = ft
 		} else {
 			c.err(x, "unknown field "+x.Name)
@@ -770,7 +770,7 @@ func (c *Checker) composite(x *ast.CompositeExpr) Type {
 		seen := map[string]bool{}
 
 		for _, e := range x.Elems {
-			ft, ok := s.Fields[e.Key]
+			ft, ok := s.fields[e.Key]
 
 			if !ok {
 				c.errSpan(e.Span, "unknown field "+e.Key)
@@ -785,7 +785,7 @@ func (c *Checker) composite(x *ast.CompositeExpr) Type {
 			seen[e.Key] = true
 		}
 
-		for n := range s.Fields {
+		for n := range s.fields {
 			if !seen[n] {
 				c.err(x, "missing field "+n)
 			}
