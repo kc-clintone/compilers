@@ -52,7 +52,7 @@ The analyzer is deliberately smaller than a compiler but follows the same data f
 6. Use helper functions, branching, both loop forms, slicing, conversions, and struct mutation.
 7. Print a deterministic token listing and summary.
 
-The program must run unchanged through `zing run`, `zing transpile`, and a binary produced by `zing build`. It is the v1 evidence that Zing can express the core data manipulation required by a future scanner/parser implementation; it is not presented as self-hosting itself.
+The program must run unchanged through `zing-interpreter run`, `zing-compiler transpile`, and a binary produced by `zing-compiler build`. It is the v1 evidence that Zing can express the core data manipulation required by a future lexer/parser implementation; it is not presented as self-hosting itself.
 
 ## Differential Test Harness
 
@@ -75,10 +75,10 @@ The program must run unchanged through `zing run`, `zing transpile`, and a binar
 
 Reserve a short, repeatable portion of the one-hour workshop for this sequence:
 
-1. Run `zing check` and `zing run` on the source analyzer.
-2. Show scanner, AST, checker, interpreter, and transpiler boundaries in the repository.
-3. Run `zing transpile`, open the readable Go, and identify the generated `main` and runtime helper.
-4. Run `zing build`, execute the binary on the same input, and compare its output with the interpreter.
+1. Run `zing-interpreter check` and `zing-interpreter run` on the source analyzer.
+2. Show lexer, AST, checker, interpreter, and transpiler boundaries in the repository.
+3. Run `zing-compiler transpile`, open the readable Go, and identify the generated `main` and runtime helper.
+4. Run `zing-compiler build`, execute the binary on the same input, and compare its output with the interpreter.
 5. Introduce a small type error and show the Zing diagnostic before Go generation.
 6. Explain how a future Zing-written compiler would replace the Go seed one stage at a time.
 
@@ -113,4 +113,3 @@ The workshop artifact is ready only after the clean-checkout rehearsal passes, i
 2. Add progressive examples and expected output.
 3. Add the source analyzer and bootstrap-readiness acceptance test.
 4. Add documentation, presenter runbook, and final clean-checkout verification notes.
-

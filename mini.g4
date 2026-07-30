@@ -1,147 +1,82 @@
-grammar MiniLang;
+grammar Zing;
 
-/* * -----------------------------------------
- * PARSER RULES
- * -----------------------------------------
- */
-
-program
-    : declaration* EOF
-    ;
+program: declaration* statement* EOF;
 
 declaration
     : varDecl ';'
     | structDecl
     | funcDecl
-    | statement
     ;
 
-// Variables and Data Structures
-varDecl
-    : 'var' ID type ('=' expression)?
-    ;
+varDecl: 'var' ID type ('=' expression)?;
+structDecl: 'type' ID 'struct' '{' structField* '}';
+structField: ID type ';';
+funcDecl: 'func' ID '(' parameters? ')' type? block;
+parameters: parameter (',' parameter)*;
+parameter: ID type;
 
-structDecl
-    : 'type' ID 'struct' '{' structField* '}'
-    ;
-
-structField
-    : ID type ';'
-    ;
-
-// Functions
-funcDecl
-    : 'func' ID '(' parameters? ')' type? block
-    ;
-
-parameters
-    : parameter (',' parameter)*
-    ;
-
-parameter
-    : ID type
-    ;
-
-// Types
 type
     : 'int'
     | 'char'
     | 'string'
     | 'bool'
-    | '[' ']' type                 // Array type
-    | 'map' '[' type ']' type      // Hash map type
-    | ID                           // Struct type
+    | '[' ']' type
+    | 'map' '[' type ']' type
+    | ID
     ;
 
-// Statements
 statement
     : varDecl ';'
-    | assignment ';'
+    | expression '=' expression ';'
     | ifStmt
     | switchStmt
     | forStmt
+    | 'break' ';'
+    | 'continue' ';'
     | returnStmt ';'
     | expression ';'
     | block
     ;
 
-assignment
-    : ID '=' expression
-    | ID '[' expression ']' '=' expression     // Array/Map assignment
-    | ID '.' ID '=' expression                 // Struct field assignment
-    ;
-
-block
-    : '{' statement* '}'
-    ;
-
-// Control Flow
-ifStmt
-    : 'if' expression block ('else' (ifStmt | block))?
-    ;
-
-switchStmt
-    : 'switch' expression '{' caseClause* defaultClause? '}'
-    ;
-
-caseClause
-    : 'case' expression ':' statement*
-    ;
-
-defaultClause
-    : 'default' ':' statement*
-    ;
-
+block: '{' statement* '}';
+ifStmt: 'if' expression block ('else' (ifStmt | block))?;
+switchStmt: 'switch' expression '{' caseClause* defaultClause? '}';
+caseClause: 'case' expression ':' statement*;
+defaultClause: 'default' ':' statement*;
 forStmt
-    : 'for' expression block                                // While-style loop
-    | 'for' varDecl ';' expression ';' assignment block     // 3-statement loop
+    : 'for' expression block
+    | 'for' varDecl ';' expression ';' expression '=' expression block
     ;
+returnStmt: 'return' expression?;
 
-returnStmt
-    : 'return' expression?
-    ;
-
-// Expressions
 expression
-    : '(' expression ')'                             # parenExpr
-    | 'print' '(' expression (',' expression)* ')'   # printExpr
-    | 'open' '(' expression ',' expression ')'       # openExpr
-    | ID '(' arguments? ')'                          # callExpr
-    | expression '[' expression ']'                  # indexExpr
-    | expression '.' ID                              # fieldAccessExpr
-    | ('!' | '-') expression                         # unaryExpr
-    | expression ('*' | '/' | '%') expression        # mulDivExpr
-    | expression ('+' | '-') expression              # addSubExpr
-    | expression ('<' | '<=' | '>' | '>=') expression# relExpr
-    | expression ('==' | '!=') expression            # eqExpr
-    | expression '&&' expression                     # andExpr
-    | expression '||' expression                     # orExpr
-    | primary                                        # primaryExpr
+    : '(' expression ')'                                      # parenExpr
+    | type '{' compositeElements? '}'                         # compositeExpr
+    | 'make' '(' type (',' expression)? ')'                   # makeExpr
+    | ID '(' arguments? ')'                                   # callExpr
+    | expression '[' expression? ':' expression? ']'         # sliceExpr
+    | expression '[' expression ']'                           # indexExpr
+    | expression '.' ID                                       # fieldAccessExpr
+    | ('!' | '-') expression                                  # unaryExpr
+    | expression ('*' | '/' | '%') expression                 # mulDivExpr
+    | expression ('+' | '-') expression                       # addSubExpr
+    | expression ('<' | '<=' | '>' | '>=') expression        # relExpr
+    | expression ('==' | '!=') expression                     # eqExpr
+    | expression '&&' expression                              # andExpr
+    | expression '||' expression                              # orExpr
+    | primary                                                 # primaryExpr
     ;
 
-arguments
-    : expression (',' expression)*
-    ;
+compositeElements: compositeElement (',' compositeElement)* ','?;
+compositeElement: ID ':' expression | expression ':' expression | expression;
+arguments: expression (',' expression)*;
+primary: INT | CHAR | STRING | BOOL | ID;
 
-primary
-    : INT
-    | CHAR
-    | STRING
-    | BOOL
-    | ID
-    ;
-
-/* * -----------------------------------------
- * LEXER RULES
- * -----------------------------------------
- */
-
-BOOL   : 'true' | 'false' ;
-ID     : [a-zA-Z_] [a-zA-Z_0-9]* ;
-INT    : [0-9]+ ;
-STRING : '"' (~["\\] | '\\' .)* '"' ;
-CHAR   : '\'' (~['\\] | '\\' .) '\'' ;
-
-WS     : [ \t\r\n]+ -> skip ;
-LINE_COMMENT : '//' ~[\r\n]* -> skip ;
-BLOCK_COMMENT: '/*' .*? '*/' -> skip ;
+BOOL: 'true' | 'false';
+ID: [a-zA-Z_] [a-zA-Z_0-9]*;
+INT: [0-9]+;
+STRING: '"' (~["\\] | '\\' .)* '"';
+CHAR: '\'' (~['\\] | '\\' .) '\'';
+WS: [ \t\r\n]+ -> skip;
+LINE_COMMENT: '//' ~[\r\n]* -> skip;
+BLOCK_COMMENT: '/*' .*? '*/' -> skip;

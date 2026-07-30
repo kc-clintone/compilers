@@ -4,7 +4,7 @@
 
 Zing is a small, statically typed teaching language whose reference implementation is written in Go. The August 1, 2026 workshop will demonstrate a complete interpreter and a source-to-source compiler that emits Go. Attendees will work on a smaller exercise implementation, while this repository provides the complete reference pipeline.
 
-The v1 language must be capable of expressing a future Zing implementation of its own scanner, parser, checker, and transpiler. Writing those components in Zing is explicitly deferred; this phase only fixes the language and runtime capabilities they will need.
+The v1 language must be capable of expressing a future Zing implementation of its own lexer, parser, checker, and transpiler. Writing those components in Zing is explicitly deferred; this phase only fixes the language and runtime capabilities they will need.
 
 `mini.g4` remains the readable language specification and may later be used for ANTLR experiments. The production v1 parser will be handwritten and must not depend on ANTLR or generated parser code.
 
@@ -71,20 +71,20 @@ None. This phase is the prerequisite for every implementation phase.
 - `writeFile(path string, contents string)` writes a complete file or terminates with a runtime diagnostic.
 - `len(value) int` accepts strings, slices, and maps.
 - `append(slice, value)` returns the resulting slice and does not mutate the caller's slice header implicitly.
-- Explicit conversions are `int(char|string)`, `char(int)`, and `string(int|char|bool)`.
+- Explicit conversions are `int(char|string)`, `char(int)`, and `string(int|char|bool)`. String-to-int conversion parses a signed decimal Go-sized integer, and int-to-char conversion accepts only values from 0 through 255; invalid or overflowing conversions are diagnosed at runtime.
 - `fail(message string)` terminates execution with a diagnosed failure and non-zero exit status.
 
 ### Diagnostics and command line
 
 - Diagnostics use `file:line:column: phase: message` and are ordered by source position.
-- Scanner and parser errors may recover to report additional independent errors. No phase runs after its prerequisite phase reports errors.
-- The final CLI commands are `check`, `run`, `transpile`, and `build`.
+- Lexer and parser errors may recover to report additional independent errors. No phase runs after its prerequisite phase reports errors.
+- The final CLI tools are `zing-interpreter` (`check`, `run`) and `zing-compiler` (`check`, `transpile`, `build`).
 - Exit code 0 means success, 1 means a source/runtime/build failure, and 2 means invalid CLI usage.
 
 ## Project Layout and Package Contracts
 
-- `cmd/zing` owns argument parsing and user-facing output.
-- `internal` packages separate diagnostics/source positions, tokens/scanning, AST/parsing, checking, interpretation, and Go generation/building.
+- `cmd/zing-interpreter` and `cmd/zing-compiler` are thin entry points; shared CLI support owns argument parsing and user-facing output.
+- `internal` packages separate diagnostics/source positions, tokens/lexing, AST/parsing, checking, interpretation, and Go generation/building.
 - Examples and test fixtures live outside implementation packages and are usable directly by the workshop commands.
 - The module is `github.com/kc-clintone/compilers` and uses only the Go standard library.
 - All phases target Go 1.22 or newer.
@@ -104,7 +104,7 @@ compiler.Build(ctx context.Context, goSource []byte, outputPath string) error
 1. Initialize `go.mod`, the command package, internal package skeletons, and a smoke test.
 2. Record the fixed semantics above in a concise language reference.
 3. Revise `mini.g4` to cover the v1 syntax while keeping it valid ANTLR grammar.
-4. Add a bootstrap-readiness matrix mapping scanner, parser, checker, and transpiler needs to Zing features.
+4. Add a bootstrap-readiness matrix mapping lexer, parser, checker, and transpiler needs to Zing features.
 5. Add placeholder package documentation describing each pipeline boundary without implementing later phases.
 
 ## Tests and Completion Criteria
@@ -117,11 +117,10 @@ compiler.Build(ctx context.Context, goSource []byte, outputPath string) error
 
 ## Phase Gate
 
-Do not begin scanner or AST work until syntax, byte-oriented string behavior, reference semantics, built-in signatures, diagnostics, and entry-point behavior are documented and reflected in `mini.g4`.
+Do not begin lexer or AST work until syntax, byte-oriented string behavior, reference semantics, built-in signatures, diagnostics, and entry-point behavior are documented and reflected in `mini.g4`.
 
 ## Commit Strategy
 
 1. Initialize the Go module and package layout with a passing smoke test.
 2. Add the Zing v1 language reference and bootstrap-readiness matrix.
 3. Update `mini.g4` to the frozen v1 syntax.
-

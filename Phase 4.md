@@ -1,4 +1,4 @@
-# Phase 4: Go Transpiler, Binary Builder, and Unified CLI
+# Phase 4: Go Transpiler, Binary Builder, and Split CLIs
 
 ## Context
 
@@ -6,7 +6,7 @@ Zing's compiler is a source-to-source compiler: it converts a checked Zing AST i
 
 ## Intended Outcome
 
-At the end of this phase, one CLI can check, interpret, transpile, or build a Zing program. Generated Go is formatted, uses only the standard library, and matches interpreter behavior.
+At the end of this phase, separate interpreter and compiler CLIs can check, interpret, transpile, or build a Zing program. Generated Go is formatted, uses only the standard library, and matches interpreter behavior.
 
 ## Dependencies
 
@@ -59,16 +59,16 @@ At the end of this phase, one CLI can check, interpret, transpile, or build a Zi
 ## CLI Contract
 
 ```text
-zing check <file>
-zing run <file> [-- program-args...]
-zing transpile -o <output.go> <file>
-zing build -o <binary> <file>
+zing-interpreter check <file>
+zing-interpreter run <file> [-- program-args...]
+zing-compiler check <file>
+zing-compiler transpile -o <output.go> <file>
+zing-compiler build -o <binary> <file>
 ```
 
-- `check` scans, parses, and checks without execution.
-- `run` executes through the interpreter and passes only arguments after `--` to `args()`.
-- `transpile` writes formatted Go to the required output path.
-- `build` generates temporary Go and creates the requested binary.
+- `check` lexes, parses, and checks without execution and is available from both tools.
+- `run` is available from `zing-interpreter`, executes through the interpreter, and passes only arguments after `--` to `args()`.
+- `transpile` and `build` are available from `zing-compiler`; they write formatted Go or create the requested binary.
 - Source/runtime/build failures exit 1; usage and unknown-command errors exit 2.
 - CLI code owns filesystem reads, diagnostic rendering, process exit decisions, and signal-derived context cancellation.
 - Internal packages return errors and must never call `os.Exit`.
@@ -81,7 +81,7 @@ zing build -o <binary> <file>
 4. Add usage tracking and deterministic injection of runtime helpers/imports.
 5. Format and syntactically parse generated Go in tests.
 6. Implement the temporary builder and toolchain error handling.
-7. Implement the four CLI subcommands and their shared front-end pipeline.
+7. Implement the two CLIs and their shared front-end pipeline.
 8. Add compiled-binary tests and compare them with interpreter results.
 
 ## Tests and Completion Criteria
@@ -96,12 +96,11 @@ zing build -o <binary> <file>
 
 ## Phase Gate
 
-Advance only when every checker-valid v1 feature can be transpiled, generated sources build, and the CLI exposes all four modes with documented exit behavior.
+Advance only when every checker-valid v1 feature can be transpiled, generated sources build, and the two CLIs expose all modes with documented exit behavior.
 
 ## Commit Strategy
 
 1. Add core Go generation for declarations, expressions, and statements.
 2. Add composite/reference semantics and generated runtime helpers.
 3. Add formatting, golden tests, and the safe binary builder.
-4. Add the unified CLI and end-to-end command tests.
-
+4. Add the split CLIs and end-to-end command tests.

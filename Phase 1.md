@@ -1,8 +1,8 @@
-# Phase 1: Handwritten Scanner, Parser, and AST
+# Phase 1: Handwritten Lexer, Parser, and AST
 
 ## Context
 
-The reference front end must show beginners how source text becomes a structured program without hiding that process behind generated code. It therefore uses a handwritten scanner and a recursive-descent parser, with Pratt parsing for expressions. `mini.g4` is the syntax contract and future parser-generator reference, not a runtime dependency.
+The reference front end must show beginners how source text becomes a structured program without hiding that process behind generated code. It therefore uses a handwritten lexer and a recursive-descent parser, with Pratt parsing for expressions. `mini.g4` is the syntax contract and future parser-generator reference, not a runtime dependency.
 
 ## Intended Outcome
 
@@ -42,7 +42,7 @@ The AST must represent:
 - Identifiers, primitive/composite literals, constructors, `make`, calls, unary/binary expressions, indexing, slicing, and field access.
 - Assignment targets as expressions, with legality deferred to the checker.
 
-## Scanner Decisions
+## Lexer Decisions
 
 - Recognize all keywords before emitting an identifier token.
 - Decode `\n`, `\r`, `\t`, `\\`, `\"`, and `\'` in string/character literals.
@@ -50,7 +50,7 @@ The AST must represent:
 - Support decimal non-negative integer tokens; unary minus remains parser syntax.
 - Skip whitespace, `//` line comments, and non-nesting `/* ... */` block comments while maintaining positions.
 - Diagnose invalid bytes, invalid escapes, integer overflow, and unterminated strings, characters, or comments.
-- Always emit EOF, including after scanner errors, to make parser recovery deterministic.
+- Always emit EOF, including after lexer errors, to make parser recovery deterministic.
 
 ## Parser Decisions
 
@@ -66,7 +66,7 @@ The AST must represent:
 ## Ordered Implementation Tasks
 
 1. Implement token kinds, source spans, and diagnostic formatting tests.
-2. Implement the scanner and table-driven scanner tests.
+2. Implement the lexer and table-driven lexer tests.
 3. Define the complete AST, node IDs, and a compact debug formatter used by tests.
 4. Implement type-expression and declaration parsing.
 5. Implement Pratt expression parsing, including postfix chains and composite construction.
@@ -76,12 +76,12 @@ The AST must represent:
 
 ## Tests and Completion Criteria
 
-- Scanner tests cover every token, keyword, comment form, escape, invalid character, overflow, and unterminated construct.
+- Lexer tests cover every token, keyword, comment form, escape, invalid character, overflow, and unterminated construct.
 - Position tests include multiple lines, tabs, comments, and escaped literals.
 - Parser tests lock operator precedence and associativity through AST snapshots.
 - Fixtures cover nested field/index targets, empty and populated composites, both loop forms, recursive functions, and top-level statements.
 - Malformed-source tests verify diagnostic text, position, ordering, and recovery.
-- Fuzz tests for the scanner and parser establish that arbitrary byte input cannot panic or hang.
+- Fuzz tests for the lexer and parser establish that arbitrary byte input cannot panic or hang.
 - `go test ./...` succeeds without ANTLR installed.
 
 ## Phase Gate
@@ -90,8 +90,7 @@ Proceed only when all valid syntax in `mini.g4` has a corresponding AST fixture 
 
 ## Commit Strategy
 
-1. Add source positions, diagnostics, tokens, and the scanner with tests.
+1. Add source positions, diagnostics, tokens, and the lexer with tests.
 2. Add the complete AST and its test formatter.
 3. Add declaration, type, and Pratt expression parsing with tests.
 4. Add statement parsing, recovery, full-program fixtures, and fuzz tests.
-
