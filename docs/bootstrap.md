@@ -10,5 +10,5 @@
 | Report errors | `print`, conversions, `fail` |
 | Emit target source | strings, slices, `writeFile` |
 
-The Go implementation is the seed implementation. Rewriting it in Zing is
-deliberately deferred until after the workshop.
+The Go implementation is the seed implementation. Rewriting it in Zing is a
+separate future milestone rather than part of the v1 reference.

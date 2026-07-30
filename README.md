@@ -1,9 +1,10 @@
 # Zing
 
-Zing is a small, statically typed teaching language for a one-hour compiler
-workshop on 1 August 2026. Its standard-library-only Go seed implementation
-uses a handwritten lexer and parser, performs a separate semantic check, and
-then either interprets the checked AST or transpiles it to readable Go.
+Zing is a small, statically typed teaching language for learning how a compiler
+front end, interpreter, and source-to-source compiler fit together. Its
+standard-library-only Go seed implementation uses a handwritten lexer and
+parser, performs a separate semantic check, and then either interprets the
+checked AST or transpiles it to readable Go.
 
 The implementation is bootstrap-ready, not self-hosted. The
 [`source-analyzer.zing`](examples/source-analyzer.zing) example demonstrates
@@ -64,23 +65,19 @@ Tests include lexer and parser fuzz targets, semantic and runtime unit tests,
 generated-Go tests, both CLI contracts, and interpreter-versus-compiled
 differential tests for successful and failing programs.
 
-## Workshop material
+## Teaching and learning material
 
 - [Zing v1 language reference](docs/language.md)
 - [Bootstrap-readiness matrix](docs/bootstrap.md)
-- [Presenter runbook](docs/presenter-runbook.md)
-- [Latest rehearsal record](docs/rehearsal.md)
-- [Phase 0: specification and setup](Phase%200.md)
-- [Phase 1: lexer, parser, and AST](Phase%201.md)
-- [Phase 2: static checking](Phase%202.md)
-- [Phase 3: interpreter](Phase%203.md)
-- [Phase 4: transpiler and CLIs](Phase%204.md)
-- [Phase 5: validation and rehearsal](Phase%205.md)
+- [Guided teaching walkthrough](docs/teaching-guide.md)
+- [Latest verification record](docs/verification.md)
 
 Progressive examples and deterministic output are under `examples/`. A
 checked-in generated source-analyzer fallback is available at
 [`examples/generated/source-analyzer.go`](examples/generated/source-analyzer.go).
 
-This repository is the complete presenter reference. A smaller attendee
-exercise may stop after lexing/parsing or omit the checker. Rewriting the seed
-implementation in Zing remains a later milestone.
+The repository is intentionally complete so it can be read stage by stage.
+When using it as an exercise, an instructor or self-directed learner can stop
+after lexing and parsing, omit static checking, or compare a smaller
+implementation against this reference. Rewriting the seed implementation in
+Zing remains a later milestone.
