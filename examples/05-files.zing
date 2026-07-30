@@ -1,0 +1,9 @@
+// Arguments and complete-file input/output.
+var values []string = args();
+var contents string;
+if len(values) < 2 {
+    fail("expected input and output paths");
+}
+contents = readFile(values[0]);
+writeFile(values[1], contents);
+print("copied", len(contents), "bytes");

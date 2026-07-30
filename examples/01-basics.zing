@@ -1,0 +1,4 @@
+// Primitive values, arithmetic, conversions, and output.
+var answer int = 6 * 7;
+var label string = "answer";
+print(label, answer, string(true));

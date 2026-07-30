@@ -1,0 +1,21 @@
+// Branches, switch, and both loop forms.
+var total int = 0;
+var countdown int = 2;
+for var i int = 0; i < 4; i = i + 1 {
+    total = total + i;
+}
+if total == 6 {
+    print("sum ok");
+} else {
+    print("sum wrong");
+}
+switch total {
+case 6:
+    print("six");
+default:
+    print("other");
+}
+for countdown > 0 {
+    print(countdown);
+    countdown = countdown - 1;
+}

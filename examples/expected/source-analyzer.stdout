@@ -1,0 +1,15 @@
+1 1 identifier var
+1 5 identifier x
+1 7 identifier int
+1 11 symbol =
+1 13 integer 7
+1 14 symbol ;
+2 1 identifier print
+2 6 symbol (
+2 7 identifier x
+2 8 symbol )
+2 9 symbol ;
+tokens 11
+identifiers 5
+integers 1
+symbols 5

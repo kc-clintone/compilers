@@ -1,0 +1,18 @@
+// Typed functions and recursion.
+func factorial(n int) int {
+    if n <= 1 {
+        return 1;
+    }
+    return n * factorial(n - 1);
+}
+
+func scoped(value int) int {
+    var result int = value;
+    {
+        var result int = value + 1;
+        print("inner", result);
+    }
+    return result;
+}
+
+print(factorial(5), scoped(7));

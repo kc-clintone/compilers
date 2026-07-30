@@ -1,0 +1,15 @@
+// Structs, slices, maps, indexing, slicing, and mutation.
+type Token struct {
+    text string;
+    line int;
+}
+
+var tokens []Token = []Token{
+    Token{text: "var", line: 1},
+    Token{text: "name", line: 1},
+};
+var counts map[string]int = make(map[string]int);
+var first []Token = tokens[0:1];
+tokens[1].text = "answer";
+counts["identifier"] = 1;
+print(first[0].text, tokens[1].text, counts["missing"]);

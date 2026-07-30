@@ -1,0 +1,87 @@
+// A compiler-shaped bootstrap probe: lex a useful source subset and count tokens.
+type Token struct {
+    kind string;
+    text string;
+    line int;
+    column int;
+}
+
+func isLetter(c char) bool {
+    if c >= 'a' && c <= 'z' {
+        return true;
+    }
+    if c >= 'A' && c <= 'Z' {
+        return true;
+    }
+    return c == '_';
+}
+
+func isDigit(c char) bool {
+    return c >= '0' && c <= '9';
+}
+
+var paths []string = args();
+var input string;
+var tokens []Token = make([]Token, 0);
+var counts map[string]int = make(map[string]int);
+var i int = 0;
+var line int = 1;
+var column int = 1;
+
+if len(paths) == 0 {
+    fail("usage: source-analyzer <file>");
+}
+input = readFile(paths[0]);
+
+for i < len(input) {
+    var c char = input[i];
+    if c == ' ' || c == '\t' || c == '\r' {
+        i = i + 1;
+        column = column + 1;
+        continue;
+    }
+    if c == '\n' {
+        i = i + 1;
+        line = line + 1;
+        column = 1;
+        continue;
+    }
+    var start int = i;
+    var startColumn int = column;
+    var kind string = "symbol";
+    if isLetter(c) {
+        kind = "identifier";
+        for i < len(input) && (isLetter(input[i]) || isDigit(input[i])) {
+            i = i + 1;
+            column = column + 1;
+        }
+    } else {
+        if isDigit(c) {
+            kind = "integer";
+            for i < len(input) && isDigit(input[i]) {
+                i = i + 1;
+                column = column + 1;
+            }
+        } else {
+            i = i + 1;
+            column = column + 1;
+        }
+    }
+    var text string = input[start:i];
+    tokens = append(tokens, Token{kind: kind, text: text, line: line, column: startColumn});
+    counts[kind] = counts[kind] + 1;
+}
+
+// Exercise mutation through a slice element and struct field without changing
+// the deterministic listing.
+if len(tokens) > 0 {
+    tokens[0].text = input[0:len(tokens[0].text)];
+}
+
+for var j int = 0; j < len(tokens); j = j + 1 {
+    print(tokens[j].line, tokens[j].column, tokens[j].kind, tokens[j].text);
+}
+print("tokens", len(tokens));
+print("identifiers", counts["identifier"]);
+print("integers", counts["integer"]);
+print("symbols", counts["symbol"]);
