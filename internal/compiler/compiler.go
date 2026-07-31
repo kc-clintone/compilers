@@ -1,3 +1,27 @@
+/*
+===============================================================================
+QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler)
+===============================================================================
+Overview:
+  Transpile Zing AST nodes into clean, 1-to-1 Go source code. In this stage, you will
+  implement code generation rules for conditional branches, variable declarations/assignments,
+  and function definitions/calls.
+
+Tasks in this file:
+  - TASK [GEN-01]: Implement compileIfStmt() for Go code generation of conditional branches.
+  - TASK [GEN-02]: Implement compileVarDecl(), compileAssignStmt(), and compileIdentExpr()
+                   for Go variable declarations and assignments.
+  - TASK [GEN-03]: Implement compileFuncDecl(), compileCallExpr(), and compileReturnStmt()
+                   for Go function signatures, calls, and returns.
+
+Commands:
+  - Run tests:  go test ./internal/compiler
+  - Compile:    ./zing compile examples/04-compiled.zing
+  - Skip stage: ./savepoint.sh 4
+  - Reset stage: ./savepoint.sh 3
+===============================================================================
+*/
+
 package compiler
 
 import (
@@ -55,18 +79,16 @@ func (c *Compiler) compileDecl(decl ast.Decl) {
 	}
 }
 
-// TODO: Compiler - Implement compileFuncDecl() for Stage 4!
-// Instructions: Emit 'func <Name>(<params...>) any { <body> }'.
+// TASK [GEN-03]: Implement compileFuncDecl() to emit 'func <Name>(<params...>) any { <body> }'.
+// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileFuncDecl(d *ast.FuncDecl) {
-	// TODO: Compiler - Function declaration code generation goes here in Stage 4.
-	c.error(d.GetSpan(), "function declaration code generation is not implemented in Stage 0")
+	c.error(d.GetSpan(), "function declaration code generation is not implemented in Stage 0/1/2/3")
 }
 
-// TODO: Compiler - Implement compileVarDecl() for Stage 4!
-// Instructions: Emit '<name> := <init>' or 'var <name> = <init>'.
+// TASK [GEN-02]: Implement compileVarDecl() to emit variable declarations in Go.
+// See HINT [GEN-02-HINT] at the bottom of this file for details.
 func (c *Compiler) compileVarDecl(d *ast.VarDecl, indent string) {
-	// TODO: Compiler - Variable declaration code generation goes here in Stage 4.
-	c.error(d.GetSpan(), "variable declaration code generation is not implemented in Stage 0")
+	c.error(d.GetSpan(), "variable declaration code generation is not implemented in Stage 0/1/2/3")
 }
 
 func (c *Compiler) compileStmt(stmt ast.Stmt, indent string) {
@@ -93,18 +115,7 @@ func (c *Compiler) compileStmt(stmt ast.Stmt, indent string) {
 		c.emit("%s}", indent)
 
 	case *ast.IfStmt:
-		c.emit("%sif ", indent)
-		c.compileExpr(s.Cond)
-		c.compileStmt(s.Then, indent)
-		if s.Else != nil {
-			c.emit(" else")
-			if _, isIf := s.Else.(*ast.IfStmt); isIf {
-				c.compileStmt(s.Else, "")
-			} else {
-				c.compileStmt(s.Else, indent)
-			}
-		}
-		c.emit("\n")
+		c.compileIfStmt(s, indent)
 
 	case *ast.ForStmt:
 		c.emit("%sfor ", indent)
@@ -137,18 +148,22 @@ func (c *Compiler) compileStmt(stmt ast.Stmt, indent string) {
 	}
 }
 
-// TODO: Compiler - Implement compileAssignStmt() for Stage 4!
-// Instructions: Emit '<indent><Name> = <Value>\n'.
-func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
-	// TODO: Compiler - Variable assignment code generation goes here in Stage 4.
-	c.error(s.GetSpan(), "variable assignment code generation is not implemented in Stage 0")
+// TASK [GEN-01]: Implement compileIfStmt() to emit Go 'if <cond> { <then> } else { <else> }'.
+// See HINT [GEN-01-HINT] at the bottom of this file for details.
+func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
+	c.error(s.GetSpan(), "conditional branch code generation is not implemented in Stage 0/1/2/3")
 }
 
-// TODO: Compiler - Implement compileReturnStmt() for Stage 4!
-// Instructions: Emit '<indent>return <Value>\n'.
+// TASK [GEN-02]: Implement compileAssignStmt() to emit '<indent><Name> = <Value>\n'.
+// See HINT [GEN-02-HINT] at the bottom of this file for details.
+func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
+	c.error(s.GetSpan(), "variable assignment code generation is not implemented in Stage 0/1/2/3")
+}
+
+// TASK [GEN-03]: Implement compileReturnStmt() to emit '<indent>return <Value>\n'.
+// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileReturnStmt(s *ast.ReturnStmt, indent string) {
-	// TODO: Compiler - Return statement code generation goes here in Stage 4.
-	c.error(s.GetSpan(), "return statement code generation is not implemented in Stage 0")
+	c.error(s.GetSpan(), "return statement code generation is not implemented in Stage 0/1/2/3")
 }
 
 func (c *Compiler) compileExpr(expr ast.Expr) {
@@ -190,18 +205,16 @@ func (c *Compiler) compileExpr(expr ast.Expr) {
 	}
 }
 
-// TODO: Compiler - Implement compileIdentExpr() for Stage 4!
-// Instructions: Emit identifier name 'e.Name'.
+// TASK [GEN-02]: Implement compileIdentExpr() to emit identifier name 'e.Name'.
+// See HINT [GEN-02-HINT] at the bottom of this file for details.
 func (c *Compiler) compileIdentExpr(e *ast.IdentExpr) {
-	// TODO: Compiler - Identifier code generation goes here in Stage 4.
-	c.error(e.GetSpan(), "identifier code generation is not implemented in Stage 0")
+	c.error(e.GetSpan(), "identifier code generation is not implemented in Stage 0/1/2/3")
 }
 
-// TODO: Compiler - Implement compileCallExpr() for Stage 4!
-// Instructions: Emit '<Callee>(<args...>)'.
+// TASK [GEN-03]: Implement compileCallExpr() to emit '<Callee>(<args...>)'.
+// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileCallExpr(e *ast.CallExpr) {
-	// TODO: Compiler - Function call code generation goes here in Stage 4.
-	c.error(e.GetSpan(), "function call code generation is not implemented in Stage 0")
+	c.error(e.GetSpan(), "function call code generation is not implemented in Stage 0/1/2/3")
 }
 
 func (c *Compiler) emit(format string, args ...any) {
@@ -211,3 +224,93 @@ func (c *Compiler) emit(format string, args ...any) {
 func (c *Compiler) error(span source.Span, msg string) {
 	c.diags = append(c.diags, diagnostic.Diagnostic{Span: span, Phase: "compiler", Message: msg})
 }
+
+/*
+===============================================================================
+QUEST HINTS & SOLUTIONS
+===============================================================================
+HINT [GEN-01-HINT]:
+  Implement compileIfStmt:
+    func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
+        c.emit("%sif ", indent)
+        c.compileExpr(s.Cond)
+        c.compileStmt(s.Then, indent)
+        if s.Else != nil {
+            c.emit(" else")
+            if _, isIf := s.Else.(*ast.IfStmt); isIf {
+                c.compileStmt(s.Else, "")
+            } else {
+                c.compileStmt(s.Else, indent)
+            }
+        }
+        c.emit("\n")
+    }
+
+HINT [GEN-02-HINT]:
+  Implement compileVarDecl, compileAssignStmt, and compileIdentExpr:
+    func (c *Compiler) compileVarDecl(d *ast.VarDecl, indent string) {
+        if indent == "" {
+            c.emit("var %s any", d.Name)
+            if d.Init != nil {
+                c.emit(" = ")
+                c.compileExpr(d.Init)
+            }
+            c.emit("\n")
+        } else {
+            c.emit("%svar %s any", indent, d.Name)
+            if d.Init != nil {
+                c.emit(" = ")
+                c.compileExpr(d.Init)
+            }
+            c.emit("\n")
+        }
+    }
+
+    func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
+        c.emit("%s%s = ", indent, s.Name)
+        c.compileExpr(s.Value)
+        c.emit("\n")
+    }
+
+    func (c *Compiler) compileIdentExpr(e *ast.IdentExpr) {
+        c.emit("%s", e.Name)
+    }
+
+HINT [GEN-03-HINT]:
+  Implement compileFuncDecl, compileCallExpr, and compileReturnStmt:
+    func (c *Compiler) compileFuncDecl(d *ast.FuncDecl) {
+        c.emit("func %s(", d.Name)
+        for i, param := range d.Params {
+            if i > 0 {
+                c.emit(", ")
+            }
+            c.emit("%s any", param)
+        }
+        c.emit(") any")
+
+        c.compileStmt(d.Body, "")
+        c.emit("\n\n")
+    }
+
+    func (c *Compiler) compileCallExpr(e *ast.CallExpr) {
+        c.emit("%s(", e.Callee)
+        for i, arg := range e.Args {
+            if i > 0 {
+                c.emit(", ")
+            }
+            c.compileExpr(arg)
+        }
+        c.emit(")")
+    }
+
+    func (c *Compiler) compileReturnStmt(s *ast.ReturnStmt, indent string) {
+        c.emit("%sreturn ", indent)
+        if s.Value != nil {
+            c.compileExpr(s.Value)
+        } else {
+            c.emit("nil")
+        }
+        c.emit("\n")
+    }
+===============================================================================
+*/

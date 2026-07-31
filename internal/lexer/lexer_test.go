@@ -6,17 +6,19 @@ import (
 	"github.com/kc-clintone/compilers/internal/token"
 )
 
-func TestLexerBasic(t *testing.T) {
-	input := `1 + 2 * (3 - 4) == 5 && true`
+func TestLexerSymbols(t *testing.T) {
+	input := `+ - * / ( ) { } = == != < > <= >= && ||`
 	toks, diags := Lex("test.zing", []byte(input))
 	if len(diags) > 0 {
 		t.Fatalf("unexpected lexer diagnostics: %v", diags)
 	}
 
 	expectedKinds := []token.Kind{
-		token.Integer, token.Plus, token.Integer, token.Star,
-		token.LParen, token.Integer, token.Minus, token.Integer, token.RParen,
-		token.Equal, token.Integer, token.And, token.True, token.EOF,
+		token.Plus, token.Minus, token.Star, token.Slash,
+		token.LParen, token.RParen, token.LBrace, token.RBrace,
+		token.Assign, token.Equal, token.NotEqual,
+		token.Less, token.Greater, token.LessEqual, token.GreaterEqual,
+		token.And, token.Or, token.EOF,
 	}
 
 	if len(toks) != len(expectedKinds) {

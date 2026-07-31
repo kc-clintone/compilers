@@ -1,6 +1,28 @@
+/*
+===============================================================================
+QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)
+===============================================================================
+Overview:
+  Define the lexical vocabulary tokens for variable and function declarations.
+
+Tasks in this file:
+  - TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds and add them
+                   to the Keywords map.
+
+Commands:
+  - Run tests:  go test ./internal/token ./internal/lexer
+  - Skip stage: ./savepoint.sh 1
+  - Reset stage: ./savepoint.sh 0
+===============================================================================
+*/
+
 package token
 
-import "github.com/kc-clintone/compilers/internal/source"
+import (
+	"fmt"
+
+	"github.com/kc-clintone/compilers/internal/source"
+)
 
 // Kind identifies a category of lexical token.
 type Kind string
@@ -42,7 +64,8 @@ const (
 	True     Kind = "true"
 	False    Kind = "false"
 
-	// TODO: Lexer - Define Var ("var") and Func ("func") token kinds here for Stage 1!
+	// TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds here for Stage 1!
+	// See HINT [LEX-03-HINT] at the bottom of this file for details.
 	// Example:
 	// Var  Kind = "var"
 	// Func Kind = "func"
@@ -56,8 +79,24 @@ type Token struct {
 	Span    source.Span
 }
 
+func (t Token) String() string {
+	if t.Literal != nil {
+		return fmt.Sprintf("%-12s %-10s %-12v %s", t.Span.Start, t.Kind, t.Literal, t.Lexeme)
+	}
+	return fmt.Sprintf("%-12s %-10s %-12s %s", t.Span.Start, t.Kind, "", t.Lexeme)
+}
+
+// PrintTokens displays a clean tabular output of scanned tokens.
+func PrintTokens(tokens []Token) {
+	fmt.Printf("%-12s %-10s %-12s %s\n", "POSITION", "KIND", "LITERAL", "LEXEME")
+	fmt.Println("---------------------------------------------------------")
+	for _, tok := range tokens {
+		fmt.Println(tok)
+	}
+}
+
 // Keywords maps reserved keywords to token kinds.
-// TODO: Lexer - Add "var" and "func" keywords to this map for Stage 1!
+// TASK [LEX-03]: Add "var": Var and "func": Func to the Keywords map below for Stage 1!
 var Keywords = map[string]Kind{
 	"if":       If,
 	"else":     Else,
@@ -69,3 +108,18 @@ var Keywords = map[string]Kind{
 	// "var":  Var,
 	// "func": Func,
 }
+
+/*
+===============================================================================
+QUEST HINTS & SOLUTIONS
+===============================================================================
+HINT [LEX-03-HINT]:
+  Define the Var and Func token constants:
+    Var  Kind = "var"
+    Func Kind = "func"
+
+  Then add them to the Keywords map:
+    "var":  Var,
+    "func": Func,
+===============================================================================
+*/

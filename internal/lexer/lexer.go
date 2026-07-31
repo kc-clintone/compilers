@@ -1,3 +1,26 @@
+/*
+===============================================================================
+QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer)
+===============================================================================
+Overview:
+  Transform raw source bytes into lexical tokens. In this stage, you will implement
+  character classification helpers and keyword matching for variables and functions.
+
+Tasks in this file:
+  - TASK [LEX-01]: Implement character classification helpers:
+                     - isDigit(c byte) bool
+                     - isIdentStart(c byte) bool
+  - TASK [LEX-02]: Implement keyword lookup in identifier() for reserved words
+                   ('var', 'func', 'if', 'else').
+
+Commands:
+  - Run tests:  go test ./internal/lexer
+  - Inspect:    ./zing tokens examples/01-tokens.zing
+  - Skip stage: ./savepoint.sh 1
+  - Reset stage: ./savepoint.sh 0
+===============================================================================
+*/
+
 package lexer
 
 import (
@@ -175,9 +198,9 @@ func (l *Lexer) identifier() {
 	}
 	raw := string(l.src[l.start:l.current])
 
-	// TODO: Lexer - Implement keyword matching for 'var' and 'func'!
-	// Instructions: Add 'var' and 'func' to token.Keywords in internal/token/token.go.
-	// When token.Keywords contains "var" and "func", token.Keywords[raw] will return token.Var or token.Func.
+	// TASK [LEX-02]: Implement keyword matching for reserved words ('var', 'func', 'if', 'else', 'true', 'false')!
+	// Look up 'raw' in token.Keywords. If present, add the corresponding token kind; otherwise add token.Ident.
+	// See HINT [LEX-02-HINT] at the bottom of this file for details.
 	if k, ok := token.Keywords[raw]; ok {
 		switch k {
 		case token.True:
@@ -227,6 +250,52 @@ func (l *Lexer) stringLiteral() {
 	l.add(token.String, string(out))
 }
 
-func isDigit(c byte) bool      { return c >= '0' && c <= '9' }
-func isIdentStart(c byte) bool { return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') }
-func isIdentPart(c byte) bool  { return isIdentStart(c) || isDigit(c) }
+// TASK [LEX-01]: Implement character classification helpers:
+//   - isDigit returns true if character 'c' is between '0' and '9'.
+//   - isIdentStart returns true if 'c' can start an identifier ('_', 'a'-'z', 'A'-'Z').
+// See HINT [LEX-01-HINT] at the bottom of this file for details.
+
+func isDigit(c byte) bool {
+	// TODO: implement isDigit helper
+	return false
+}
+
+func isIdentStart(c byte) bool {
+	// TODO: implement isIdentStart helper
+	return false
+}
+
+func isIdentPart(c byte) bool {
+	return isIdentStart(c) || isDigit(c)
+}
+
+/*
+===============================================================================
+QUEST HINTS & SOLUTIONS
+===============================================================================
+HINT [LEX-01-HINT]:
+  Implement isDigit and isIdentStart:
+    func isDigit(c byte) bool {
+        return c >= '0' && c <= '9'
+    }
+
+    func isIdentStart(c byte) bool {
+        return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+    }
+
+HINT [LEX-02-HINT]:
+  Check token.Keywords for 'raw':
+    if k, ok := token.Keywords[raw]; ok {
+        switch k {
+        case token.True:
+            l.add(k, true)
+        case token.False:
+            l.add(k, false)
+        default:
+            l.add(k, nil)
+        }
+    } else {
+        l.add(token.Ident, raw)
+    }
+===============================================================================
+*/

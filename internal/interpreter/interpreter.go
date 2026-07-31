@@ -1,3 +1,30 @@
+/*
+===============================================================================
+QUEST STAGE 3: THE LIVING ENGINE (Interpreter)
+===============================================================================
+Overview:
+  Evaluate the AST dynamically by walking AST nodes and managing lexical environment
+  scopes. In this stage, you will implement execution logic for conditional branches,
+  variable environments, and function invocation call frames.
+
+Tasks in this file:
+  - TASK [EVAL-01]: Implement evalIfStmt() for conditional branches.
+                    Uses isTruthy() and evalStmt().
+  - TASK [EVAL-02]: Implement evalVarDecl(), evalAssignStmt(), and evalIdentExpr()
+                    for environment variable storage and lookup.
+                    Uses env.Define(), env.Set(), env.Get().
+  - TASK [EVAL-03]: Implement evalFuncDecl(), evalCallExpr(), and evalReturnStmt()
+                    for function registration, call stack frames, and returns.
+                    Uses UserFunction, NewEnvironment(), and ReturnVal.
+
+Commands:
+  - Run tests:  go test ./internal/interpreter
+  - Run code:   ./zing run examples/03-interpreter.zing
+  - Skip stage: ./savepoint.sh 3
+  - Reset stage: ./savepoint.sh 2
+===============================================================================
+*/
+
 package interpreter
 
 import (
@@ -98,18 +125,18 @@ func (in *Interpreter) evalDecl(decl ast.Decl) {
 	}
 }
 
-// TODO: Interpreter - Implement evalFuncDecl() for Stage 3!
-// Instructions: Store funcDecl and env in in.funcs map under function name.
+// TASK [EVAL-03]: Implement evalFuncDecl() to register user functions in in.funcs[d.Name].
+// Uses UserFunction{Decl: d, Closure: env}.
+// See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
-	// TODO: Interpreter - Function declaration evaluation goes here in Stage 3.
-	in.error(d.GetSpan(), "function declarations are not evaluated in Stage 0")
+	in.error(d.GetSpan(), "function declarations are not evaluated in Stage 0/1/2")
 }
 
-// TODO: Interpreter - Implement evalVarDecl() for Stage 3!
-// Instructions: Evaluate initial expression and call env.Define(d.Name, val).
+// TASK [EVAL-02]: Implement evalVarDecl() to evaluate initializer and define variable in env.
+// Uses env.Define(d.Name, val).
+// See HINT [EVAL-02-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
-	// TODO: Interpreter - Variable declaration evaluation goes here in Stage 3.
-	in.error(d.GetSpan(), "variable declarations are not evaluated in Stage 0")
+	in.error(d.GetSpan(), "variable declarations are not evaluated in Stage 0/1/2")
 }
 
 func (in *Interpreter) evalStmt(stmt ast.Stmt, env *Environment) any {
@@ -143,13 +170,7 @@ func (in *Interpreter) evalStmt(stmt ast.Stmt, env *Environment) any {
 		return nil
 
 	case *ast.IfStmt:
-		condVal := in.evalExpr(s.Cond, env)
-		if isTruthy(condVal) {
-			return in.evalStmt(s.Then, env)
-		} else if s.Else != nil {
-			return in.evalStmt(s.Else, env)
-		}
-		return nil
+		return in.evalIfStmt(s, env)
 
 	case *ast.ForStmt:
 		for {
@@ -192,19 +213,25 @@ func (in *Interpreter) evalStmt(stmt ast.Stmt, env *Environment) any {
 	}
 }
 
-// TODO: Interpreter - Implement evalAssignStmt() for Stage 3!
-// Instructions: Evaluate s.Value and call env.Set(s.Name, val). Report error if undefined.
-func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
-	// TODO: Interpreter - Variable assignment evaluation goes here in Stage 3.
-	in.error(s.GetSpan(), "variable assignments are not evaluated in Stage 0")
+// TASK [EVAL-01]: Implement evalIfStmt() for conditional branches.
+// Uses isTruthy(condVal) and evalStmt().
+// See HINT [EVAL-01-HINT] at the bottom of this file for details.
+func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
+	in.error(s.GetSpan(), "conditional branch statements are not evaluated in Stage 0/1/2")
 	return nil
 }
 
-// TODO: Interpreter - Implement evalReturnStmt() for Stage 3!
-// Instructions: Evaluate s.Value and return ReturnVal{Value: val}.
+// TASK [EVAL-02]: Implement evalAssignStmt() to evaluate value and update env using env.Set(s.Name, val).
+// See HINT [EVAL-02-HINT] at the bottom of this file for details.
+func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
+	in.error(s.GetSpan(), "variable assignments are not evaluated in Stage 0/1/2")
+	return nil
+}
+
+// TASK [EVAL-03]: Implement evalReturnStmt() to return ReturnVal{Value: val}.
+// See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
-	// TODO: Interpreter - Return statement evaluation goes here in Stage 3.
-	in.error(s.GetSpan(), "return statements are not evaluated in Stage 0")
+	in.error(s.GetSpan(), "return statements are not evaluated in Stage 0/1/2")
 	return nil
 }
 
@@ -313,18 +340,17 @@ func (in *Interpreter) evalBinaryOp(e *ast.BinaryExpr, left, right any) any {
 	return nil
 }
 
-// TODO: Interpreter - Implement evalIdentExpr() for Stage 3!
-// Instructions: Look up variable name in env using env.Get(e.Name). Report error if undefined.
+// TASK [EVAL-02]: Implement evalIdentExpr() to look up variable value using env.Get(e.Name).
+// See HINT [EVAL-02-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
-	// TODO: Interpreter - Identifier evaluation goes here in Stage 3.
 	in.error(e.GetSpan(), fmt.Sprintf("undefined variable '%s'", e.Name))
 	return nil
 }
 
-// TODO: Interpreter - Implement evalCallExpr() for Stage 3!
-// Instructions: Look up user function in in.funcs, create call frame Environment with argument bindings, execute body, and unwrap ReturnVal.
+// TASK [EVAL-03]: Implement evalCallExpr() to look up user function, create argument environment, and execute body.
+// Uses NewEnvironment(), evalStmt(), and ReturnVal.
+// See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
-	// TODO: Interpreter - Function call evaluation goes here in Stage 3.
 	in.error(e.GetSpan(), fmt.Sprintf("undefined function '%s'", e.Callee))
 	return nil
 }
@@ -361,3 +387,87 @@ func toIntPair(l, r any) (int, int, bool) {
 	ri, ok2 := toInt(r)
 	return li, ri, ok1 && ok2
 }
+
+/*
+===============================================================================
+QUEST HINTS & SOLUTIONS
+===============================================================================
+HINT [EVAL-01-HINT]:
+  Implement evalIfStmt:
+    func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
+        condVal := in.evalExpr(s.Cond, env)
+        if isTruthy(condVal) {
+            return in.evalStmt(s.Then, env)
+        } else if s.Else != nil {
+            return in.evalStmt(s.Else, env)
+        }
+        return nil
+    }
+
+HINT [EVAL-02-HINT]:
+  Implement evalVarDecl, evalAssignStmt, and evalIdentExpr:
+    func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
+        var val any
+        if d.Init != nil {
+            val = in.evalExpr(d.Init, env)
+        }
+        env.Define(d.Name, val)
+    }
+
+    func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
+        val := in.evalExpr(s.Value, env)
+        if !env.Set(s.Name, val) {
+            in.error(s.GetSpan(), fmt.Sprintf("cannot assign to undefined variable '%s'", s.Name))
+        }
+        return nil
+    }
+
+    func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
+        val, ok := env.Get(e.Name)
+        if !ok {
+            in.error(e.GetSpan(), fmt.Sprintf("undefined variable '%s'", e.Name))
+            return nil
+        }
+        return val
+    }
+
+HINT [EVAL-03-HINT]:
+  Implement evalFuncDecl, evalCallExpr, and evalReturnStmt:
+    func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
+        in.funcs[d.Name] = &UserFunction{Decl: d, Closure: env}
+    }
+
+    func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
+        var val any
+        if s.Value != nil {
+            val = in.evalExpr(s.Value, env)
+        }
+        return ReturnVal{Value: val}
+    }
+
+    func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
+        fn, ok := in.funcs[e.Callee]
+        if !ok {
+            in.error(e.GetSpan(), fmt.Sprintf("undefined function '%s'", e.Callee))
+            return nil
+        }
+
+        if len(e.Args) != len(fn.Decl.Params) {
+            in.error(e.GetSpan(), fmt.Sprintf("function '%s' expects %d arguments, got %d", e.Callee, len(fn.Decl.Params), len(e.Args)))
+            return nil
+        }
+
+        callEnv := NewEnvironment(fn.Closure)
+        for i, argExpr := range e.Args {
+            argVal := in.evalExpr(argExpr, env)
+            callEnv.Define(fn.Decl.Params[i], argVal)
+        }
+
+        res := in.evalStmt(fn.Decl.Body, callEnv)
+        if ret, isRet := res.(ReturnVal); isRet {
+            return ret.Value
+        }
+        return nil
+    }
+===============================================================================
+*/

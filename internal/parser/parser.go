@@ -1,3 +1,32 @@
+/*
+===============================================================================
+QUEST STAGE 2: THE STRUCTURAL WEAVER (Parser)
+===============================================================================
+Overview:
+  Parse a stream of tokens into an Abstract Syntax Tree (AST) using Recursive Descent.
+  In this stage, you will implement parsing rules for branches, variables, functions,
+  and identifier expressions.
+
+Tasks in this file:
+  - TASK [PARSE-01]: Implement parseIfStmt() for conditional branches.
+                     Uses ast.IfStmt, token.If, token.Else, parseBlockStmt().
+  - TASK [PARSE-02]: Implement parseVarDecl() and parseAssignStmt() for variable
+                     declarations and assignments.
+                     Uses ast.VarDecl, ast.AssignStmt, token.Var, token.Assign.
+  - TASK [PARSE-03]: Implement parseFuncDecl(), parseCallExpr(), and parseReturnStmt()
+                     for function declarations, invocations, and returns.
+                     Uses ast.FuncDecl, ast.CallExpr, ast.ReturnStmt, token.Func.
+  - TASK [PARSE-04]: Implement parseIdentExpr() for variable identifier lookups.
+                     Uses ast.IdentExpr and token.Ident.
+
+Commands:
+  - Run tests:  go test ./internal/parser
+  - Inspect:    ./zing ast examples/02-ast.zing
+  - Skip stage: ./savepoint.sh 2
+  - Reset stage: ./savepoint.sh 1
+===============================================================================
+*/
+
 package parser
 
 import (
@@ -39,8 +68,7 @@ func (p *Parser) program() *ast.Program {
 	prog := &ast.Program{Base: ast.Base{Span: start}}
 
 	for !p.atEnd() {
-		// Top-level item: declaration or statement
-		if p.check(token.Kind("func")) || p.check(token.Kind("var")) {
+		if p.check(token.Kind("func")) {
 			d := p.declaration()
 			if d != nil {
 				prog.Decls = append(prog.Decls, d)
@@ -63,28 +91,25 @@ func (p *Parser) declaration() ast.Decl {
 	if p.check(token.Kind("func")) {
 		return p.parseFuncDecl()
 	}
-	if p.check(token.Kind("var")) {
-		return p.parseVarDecl()
-	}
 	p.error("expected declaration")
 	p.advance()
 	return nil
 }
 
-// TODO: Parser - Implement parseFuncDecl() for Stage 2!
-// Instructions: Parse 'func <name>(<params...>) { <body> }' and return *ast.FuncDecl.
+// TASK [PARSE-03]: Implement parseFuncDecl() for function declarations: func <name>(<params...>) { <body> }
+// Uses ast.FuncDecl, token.Func, token.LParen, token.RParen, token.Comma, token.LBrace, parseBlockStmt().
+// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseFuncDecl() ast.Decl {
-	// TODO: Parser - Function declaration parsing goes here in Stage 2.
-	p.error("function declarations ('func') are not implemented yet in this checkpoint")
+	p.error("function declarations ('func') are not implemented yet in Stage 0/1")
 	p.advance()
 	return nil
 }
 
-// TODO: Parser - Implement parseVarDecl() for Stage 2!
-// Instructions: Parse 'var <name> = <expr>' and return *ast.VarDecl.
+// TASK [PARSE-02]: Implement parseVarDecl() for variable declarations: var <name> = <expr>
+// Uses ast.VarDecl, token.Var, token.Ident, token.Assign, expression().
+// See HINT [PARSE-02-HINT] at the bottom of this file for details.
 func (p *Parser) parseVarDecl() *ast.VarDecl {
-	// TODO: Parser - Variable declaration parsing goes here in Stage 2.
-	p.error("variable declarations ('var') are not implemented yet in this checkpoint")
+	p.error("variable declarations ('var') are not implemented yet in Stage 0/1")
 	p.advance()
 	return nil
 }
@@ -118,8 +143,7 @@ func (p *Parser) statement() ast.Stmt {
 		return p.parseAssignStmt()
 	}
 
-	// TODO: Parser - Implement parseReturnStmt() for Stage 2!
-	if p.check(token.Kind("return")) || (p.check(token.Ident) && p.peek().Lexeme == "return") {
+	if p.check(token.Ident) && p.peek().Lexeme == "return" {
 		return p.parseReturnStmt()
 	}
 
@@ -133,26 +157,33 @@ func (p *Parser) statement() ast.Stmt {
 }
 
 func (p *Parser) parseVarDeclAfterKeyword() *ast.VarDecl {
-	// TODO: Parser - Complete variable declaration parsing after 'var' keyword.
-	p.error("variable declarations ('var') are not implemented yet in this checkpoint")
+	p.error("variable declarations ('var') are not implemented yet in Stage 0/1")
 	return nil
 }
 
-// TODO: Parser - Implement parseAssignStmt() for Stage 2!
-// Instructions: Parse '<name> = <expr>' and return *ast.AssignStmt.
+// TASK [PARSE-01]: Implement parseIfStmt() for conditional branch statements: if (<cond>) { <then> } else { <else> }
+// Uses ast.IfStmt, token.If, token.Else, expression(), parseBlockStmt().
+// See HINT [PARSE-01-HINT] at the bottom of this file for details.
+func (p *Parser) parseIfStmt() ast.Stmt {
+	p.error("conditional branch statements ('if') are not implemented yet in Stage 0/1")
+	return nil
+}
+
+// TASK [PARSE-02]: Implement parseAssignStmt() for variable assignment: <name> = <expr>
+// Uses ast.AssignStmt, token.Ident, token.Assign, expression().
+// See HINT [PARSE-02-HINT] at the bottom of this file for details.
 func (p *Parser) parseAssignStmt() ast.Stmt {
-	// TODO: Parser - Variable assignment parsing goes here in Stage 2.
-	p.error("variable assignments are not implemented yet in this checkpoint")
+	p.error("variable assignments are not implemented yet in Stage 0/1")
 	p.advance()
 	p.advance()
 	return nil
 }
 
-// TODO: Parser - Implement parseReturnStmt() for Stage 2!
-// Instructions: Parse 'return <expr>' and return *ast.ReturnStmt.
+// TASK [PARSE-03]: Implement parseReturnStmt() for return statements: return <expr>
+// Uses ast.ReturnStmt, expression().
+// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseReturnStmt() ast.Stmt {
-	// TODO: Parser - Return statement parsing goes here in Stage 2.
-	p.error("return statements are not implemented yet in this checkpoint")
+	p.error("return statements are not implemented yet in Stage 0/1")
 	p.advance()
 	return nil
 }
@@ -175,33 +206,6 @@ func (p *Parser) parsePrintStmt() ast.Stmt {
 	}
 	end := p.consume(token.RParen, "expected ')' after print arguments")
 	return &ast.PrintStmt{Base: ast.Base{Span: mergeSpan(start.Span, end.Span)}, Args: args}
-}
-
-func (p *Parser) parseIfStmt() ast.Stmt {
-	start := p.previous()
-	cond := p.expression()
-	p.consume(token.LBrace, "expected '{' after if condition")
-	thenBranch := p.parseBlockStmt()
-
-	var elseBranch ast.Stmt
-	if p.match(token.Else) {
-		if p.match(token.If) {
-			elseBranch = p.parseIfStmt()
-		} else if p.match(token.LBrace) {
-			elseBranch = p.parseBlockStmt()
-		} else {
-			p.error("expected '{' or 'if' after 'else'")
-		}
-	}
-
-	span := start.Span
-	if elseBranch != nil {
-		span = mergeSpan(start.Span, elseBranch.GetSpan())
-	} else if thenBranch != nil {
-		span = mergeSpan(start.Span, thenBranch.GetSpan())
-	}
-
-	return &ast.IfStmt{Base: ast.Base{Span: span}, Cond: cond, Then: thenBranch, Else: elseBranch}
 }
 
 func (p *Parser) parseForStmt() ast.Stmt {
@@ -315,7 +319,6 @@ func (p *Parser) primary() ast.Expr {
 	}
 
 	if p.check(token.Ident) {
-		tok := p.peek()
 		if p.peekNext().Kind == token.LParen {
 			return p.parseCallExpr()
 		}
@@ -327,21 +330,21 @@ func (p *Parser) primary() ast.Expr {
 	return nil
 }
 
-// TODO: Parser - Implement parseIdentExpr() for Stage 2!
-// Instructions: Return *ast.IdentExpr containing identifier name.
+// TASK [PARSE-04]: Implement parseIdentExpr() for variable lookups.
+// Uses ast.IdentExpr and token.Ident.
+// See HINT [PARSE-04-HINT] at the bottom of this file for details.
 func (p *Parser) parseIdentExpr() ast.Expr {
-	// TODO: Parser - Identifier expression parsing goes here in Stage 2.
 	tok := p.advance()
-	p.error(fmt.Sprintf("identifier expressions ('%s') are not implemented yet in this checkpoint", tok.Lexeme))
+	p.error(fmt.Sprintf("identifier expressions ('%s') are not implemented yet in Stage 0/1", tok.Lexeme))
 	return nil
 }
 
-// TODO: Parser - Implement parseCallExpr() for Stage 2!
-// Instructions: Parse '<callee>(<args...>)' and return *ast.CallExpr.
+// TASK [PARSE-03]: Implement parseCallExpr() for function call expressions: <callee>(<args...>)
+// Uses ast.CallExpr, token.Ident, token.LParen, token.RParen, token.Comma.
+// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseCallExpr() ast.Expr {
-	// TODO: Parser - Function call parsing goes here in Stage 2.
 	tok := p.advance()
-	p.error(fmt.Sprintf("function calls ('%s(...)') are not implemented yet in this checkpoint", tok.Lexeme))
+	p.error(fmt.Sprintf("function calls ('%s(...)') are not implemented yet in Stage 0/1", tok.Lexeme))
 	p.consume(token.LParen, "")
 	p.consume(token.RParen, "")
 	return nil
@@ -395,3 +398,150 @@ func (p *Parser) error(msg string) {
 func mergeSpan(a, b source.Span) source.Span {
 	return source.Span{Filename: a.Filename, Start: a.Start, End: b.End}
 }
+
+/*
+===============================================================================
+QUEST HINTS & SOLUTIONS
+===============================================================================
+HINT [PARSE-01-HINT]:
+  Implement parseIfStmt:
+    func (p *Parser) parseIfStmt() ast.Stmt {
+        start := p.previous()
+        cond := p.expression()
+        p.consume(token.LBrace, "expected '{' after if condition")
+        thenBranch := p.parseBlockStmt()
+
+        var elseBranch ast.Stmt
+        if p.match(token.Else) {
+            if p.match(token.If) {
+                elseBranch = p.parseIfStmt()
+            } else if p.match(token.LBrace) {
+                elseBranch = p.parseBlockStmt()
+            } else {
+                p.error("expected '{' or 'if' after 'else'")
+            }
+        }
+
+        span := start.Span
+        if elseBranch != nil {
+            span = mergeSpan(start.Span, elseBranch.GetSpan())
+        } else if thenBranch != nil {
+            span = mergeSpan(start.Span, thenBranch.GetSpan())
+        }
+
+        return &ast.IfStmt{Base: ast.Base{Span: span}, Cond: cond, Then: thenBranch, Else: elseBranch}
+    }
+
+HINT [PARSE-02-HINT]:
+  Implement parseVarDecl, parseVarDeclAfterKeyword, and parseAssignStmt:
+    func (p *Parser) parseVarDecl() *ast.VarDecl {
+        p.consume(token.Var, "expected 'var'")
+        return p.parseVarDeclAfterKeyword()
+    }
+
+    func (p *Parser) parseVarDeclAfterKeyword() *ast.VarDecl {
+        start := p.previous()
+        nameTok := p.consume(token.Ident, "expected variable name after 'var'")
+        p.consume(token.Assign, "expected '=' after variable name")
+        init := p.expression()
+        p.match(token.Semicolon)
+
+        endSpan := start.Span
+        if init != nil {
+            endSpan = mergeSpan(start.Span, init.GetSpan())
+        }
+
+        return &ast.VarDecl{Base: ast.Base{Span: endSpan}, Name: nameTok.Lexeme, Init: init}
+    }
+
+    func (p *Parser) parseAssignStmt() ast.Stmt {
+        nameTok := p.consume(token.Ident, "expected variable name")
+        p.consume(token.Assign, "expected '='")
+        val := p.expression()
+        p.match(token.Semicolon)
+
+        endSpan := nameTok.Span
+        if val != nil {
+            endSpan = mergeSpan(nameTok.Span, val.GetSpan())
+        }
+
+        return &ast.AssignStmt{Base: ast.Base{Span: endSpan}, Name: nameTok.Lexeme, Value: val}
+    }
+
+HINT [PARSE-03-HINT]:
+  Implement parseFuncDecl, parseCallExpr, and parseReturnStmt:
+    func (p *Parser) parseFuncDecl() ast.Decl {
+        start := p.consume(token.Func, "expected 'func'")
+        nameTok := p.consume(token.Ident, "expected function name")
+        p.consume(token.LParen, "expected '(' after function name")
+
+        var params []string
+        if !p.check(token.RParen) {
+            for {
+                paramTok := p.consume(token.Ident, "expected parameter name")
+                params = append(params, paramTok.Lexeme)
+                if !p.match(token.Comma) {
+                    break
+                }
+            }
+        }
+        p.consume(token.RParen, "expected ')' after parameters")
+        p.consume(token.LBrace, "expected '{' before function body")
+        body := p.parseBlockStmt()
+
+        return &ast.FuncDecl{
+            Base:   ast.Base{Span: mergeSpan(start.Span, body.GetSpan())},
+            Name:   nameTok.Lexeme,
+            Params: params,
+            Body:   body,
+        }
+    }
+
+    func (p *Parser) parseCallExpr() ast.Expr {
+        calleeTok := p.consume(token.Ident, "expected function name")
+        p.consume(token.LParen, "expected '('")
+
+        var args []ast.Expr
+        if !p.check(token.RParen) {
+            for {
+                arg := p.expression()
+                if arg != nil {
+                    args = append(args, arg)
+                }
+                if !p.match(token.Comma) {
+                    break
+                }
+            }
+        }
+        endTok := p.consume(token.RParen, "expected ')' after arguments")
+
+        return &ast.CallExpr{
+            Base:   ast.Base{Span: mergeSpan(calleeTok.Span, endTok.Span)},
+            Callee: calleeTok.Lexeme,
+            Args:   args,
+        }
+    }
+
+    func (p *Parser) parseReturnStmt() ast.Stmt {
+        start := p.advance()
+        var val ast.Expr
+        if !p.check(token.RBrace) && !p.check(token.Semicolon) && !p.atEnd() {
+            val = p.expression()
+        }
+        p.match(token.Semicolon)
+
+        span := start.Span
+        if val != nil {
+            span = mergeSpan(start.Span, val.GetSpan())
+        }
+        return &ast.ReturnStmt{Base: ast.Base{Span: span}, Value: val}
+    }
+
+HINT [PARSE-04-HINT]:
+  Implement parseIdentExpr:
+    func (p *Parser) parseIdentExpr() ast.Expr {
+        tok := p.consume(token.Ident, "expected identifier")
+        return &ast.IdentExpr{Base: ast.Base{Span: tok.Span}, Name: tok.Lexeme}
+    }
+===============================================================================
+*/

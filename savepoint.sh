@@ -3,11 +3,11 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <stage_number (0-4)>"
-    echo "  0: 0-base        (Initial scaffold with TODO comments)"
-    echo "  1: 1-lexer       (Lexer support for variables and functions)"
-    echo "  2: 2-parser      (Parser support for variables and functions)"
-    echo "  3: 3-interpreter (Interpreter support for variables and functions)"
-    echo "  4: 4-compiler    (Compiler support for variables and functions)"
+    echo "  0: 0-base        (Initial scaffold with QUEST tasks)"
+    echo "  1: 1-lexer       (Lexer QUEST solved: digits, identifiers, var/func tokens)"
+    echo "  2: 2-parser      (Parser QUEST solved: if/else, var, func, call, return)"
+    echo "  3: 3-interpreter (Interpreter QUEST solved: branches, env, function frames)"
+    echo "  4: 4-compiler    (Compiler QUEST solved: Go transpilation complete)"
     exit 1
 fi
 

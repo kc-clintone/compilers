@@ -8,21 +8,25 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/kc-clintone/compilers/internal/ast"
 	"github.com/kc-clintone/compilers/internal/compiler"
 	"github.com/kc-clintone/compilers/internal/interpreter"
+	"github.com/kc-clintone/compilers/internal/lexer"
 	"github.com/kc-clintone/compilers/internal/parser"
+	"github.com/kc-clintone/compilers/internal/token"
 )
 
 func printHelp() {
-	fmt.Println("Zing Compiler & Interpreter (Workshop Version)")
+	fmt.Println("Zing Compiler & Interpreter (Workshop Edition)")
 	fmt.Println()
 	fmt.Println("Usage:")
-	fmt.Println("  zing <file.zing>                  Run file using interpreter")
-	fmt.Println("  zing run <file.zing>              Run file using interpreter")
-	fmt.Println("  zing compile <file.zing>          Transpile file to Go and execute")
-	fmt.Println("  zing transpile [-o out.go] <file>  Transpile Zing code to Go code")
-	fmt.Println("  zing repl                         Start interactive REPL")
-	fmt.Println("  zing -h, --help                   Show this help message")
+	fmt.Println("  zing tokens <file.zing>            Inspect Lexer token stream")
+	fmt.Println("  zing ast <file.zing>               Inspect Parser AST tree")
+	fmt.Println("  zing run <file.zing>               Run Zing program with interpreter")
+	fmt.Println("  zing compile <file.zing>           Transpile Zing program to Go and execute")
+	fmt.Println("  zing transpile [-o out.go] <file>   Transpile Zing program to Go source file")
+	fmt.Println("  zing repl                          Start interactive REPL")
+	fmt.Println("  zing -h, --help                    Show this help message")
 }
 
 func main() {
@@ -39,8 +43,18 @@ func main() {
 	}
 
 	switch cmd {
-	case "repl":
-		runREPL()
+	case "tokens", "lex":
+		if len(args) < 2 {
+			fmt.Println("Error: missing filename for tokens")
+			os.Exit(1)
+		}
+		printFileTokens(args[1])
+	case "ast", "parse":
+		if len(args) < 2 {
+			fmt.Println("Error: missing filename for ast")
+			os.Exit(1)
+		}
+		printFileAST(args[1])
 	case "run":
 		if len(args) < 2 {
 			fmt.Println("Error: missing filename for run")
@@ -69,6 +83,8 @@ func main() {
 			os.Exit(1)
 		}
 		transpileFile(inputFile, outputFile)
+	case "repl":
+		runREPL()
 	default:
 		if strings.HasPrefix(cmd, "-") {
 			fmt.Printf("Unknown flag: %s\n", cmd)
@@ -76,6 +92,44 @@ func main() {
 			os.Exit(1)
 		}
 		runFile(cmd)
+	}
+}
+
+func printFileTokens(filename string) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Printf("Error reading file %s: %v\n", filename, err)
+		os.Exit(1)
+	}
+
+	toks, diags := lexer.Lex(filename, data)
+	token.PrintTokens(toks)
+
+	if len(diags) > 0 {
+		fmt.Println("\nLexer Diagnostics:")
+		for _, d := range diags {
+			fmt.Println(d)
+		}
+	}
+}
+
+func printFileAST(filename string) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		fmt.Printf("Error reading file %s: %v\n", filename, err)
+		os.Exit(1)
+	}
+
+	prog, diags := parser.Parse(filename, data)
+	if prog != nil {
+		ast.Print(prog)
+	}
+
+	if len(diags) > 0 {
+		fmt.Println("\nParser Diagnostics:")
+		for _, d := range diags {
+			fmt.Println(d)
+		}
 	}
 }
 
