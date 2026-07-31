@@ -60,6 +60,8 @@ const (
 	CharType     Kind = "char"
 	StringType   Kind = "string"
 	BoolType     Kind = "bool"
+	Export       Kind = "export"
+	Import       Kind = "import"
 )
 
 // Token contains the original lexeme, its decoded literal value, and span.
@@ -75,4 +77,5 @@ var Keywords = map[string]Kind{
 	"var": Var, "type": Type, "struct": Struct, "func": Func, "if": If, "else": Else, "switch": Switch,
 	"case": Case, "default": Default, "for": For, "return": Return, "break": Break, "continue": Continue,
 	"true": True, "false": False, "map": Map, "make": Make, "int": IntType, "char": CharType, "string": StringType, "bool": BoolType,
+	"export": Export, "import": Import,
 }

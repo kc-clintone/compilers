@@ -85,9 +85,9 @@ This roadmap outlines how a small initial prototype grows into a production-grad
 
 *Building the ecosystem tools that turn a language into a joy to write every day!*
 
-- [ ] **Built-in Package Manager & Modules System**
-  Provides dependency resolution, package downloading, and module namespacing for sharing code.
-  A seamless package manager unlocks community collaboration and code reusability across projects.
+- [ ] **Built-in Package Manager & Modules System (`import` & `export`)**
+  Provides dependency resolution, multi-file compilation, module namespacing (`import`), and symbol scope exporting (`export`) for sharing code across modules.
+  A seamless module and package system unlocks team collaboration, namespace management, and code reusability across projects.
 - [ ] **Language Server Protocol (LSP) for IDE Support**
   Implements standard LSP features like auto-completion, hover docs, and inline syntax error diagnostics in IDEs like VS Code.
   Superior editor support dramatically boosts developer productivity and adoption.

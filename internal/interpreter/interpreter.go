@@ -34,6 +34,8 @@ func (osFileSystem) WriteFile(name string, data []byte, mode os.FileMode) error 
 type Options struct {
 	Args   []string
 	Stdout io.Writer
+	Stderr io.Writer
+	Stdin  io.Reader
 	Files  FileSystem
 }
 
@@ -154,12 +156,24 @@ func Run(ctx context.Context, program *ast.Program, info *checker.Info, options 
 		funcs:   map[string]*ast.FuncDecl{},
 	}
 	for _, declaration := range program.Decls {
-		if function, ok := declaration.(*ast.FuncDecl); ok {
+		decl := declaration
+		if exp, ok := declaration.(*ast.ExportStmt); ok {
+			if innerDecl, ok := exp.Target.(ast.Decl); ok {
+				decl = innerDecl
+			}
+		}
+		if function, ok := decl.(*ast.FuncDecl); ok {
 			runner.funcs[function.Name] = function
 		}
 	}
 	for _, declaration := range program.Decls {
-		variable, ok := declaration.(*ast.VarDecl)
+		decl := declaration
+		if exp, ok := declaration.(*ast.ExportStmt); ok {
+			if innerDecl, ok := exp.Target.(ast.Decl); ok {
+				decl = innerDecl
+			}
+		}
+		variable, ok := decl.(*ast.VarDecl)
 		if !ok {
 			continue
 		}
@@ -245,6 +259,23 @@ func (runner *runner) execute(statement ast.Stmt) (execution, error) {
 		return execution{signal: signalBreak}, nil
 	case *ast.ContinueStmt:
 		return execution{signal: signalContinue}, nil
+	case *ast.ExportStmt:
+		if targetStmt, ok := node.Target.(ast.Stmt); ok {
+			exec, err := runner.execute(targetStmt)
+			if err != nil {
+				return exec, err
+			}
+		}
+		if varDecl, ok := node.Target.(*ast.VarDecl); ok {
+			if val, ok := runner.current.get(varDecl.Name); ok {
+				if runner.current.parent != nil {
+					runner.current.parent.define(varDecl.Name, val)
+				}
+			}
+		}
+		return execution{}, nil
+	case *ast.ImportStmt:
+		return execution{}, nil
 	}
 	return execution{}, nil
 }

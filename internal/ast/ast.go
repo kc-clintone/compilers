@@ -295,6 +295,24 @@ type ContinueStmt struct{ Base }
 
 func (*ContinueStmt) stmt() {}
 
+// ExportStmt upgrades the scope of symbols contained within Target up one lexical scope level.
+type ExportStmt struct {
+	Base
+	Target Node
+}
+
+func (*ExportStmt) decl() {}
+func (*ExportStmt) stmt() {}
+
+// ImportStmt imports a module (currently scaffolding reserved for future module support).
+type ImportStmt struct {
+	Base
+	Path string
+}
+
+func (*ImportStmt) decl() {}
+func (*ImportStmt) stmt() {}
+
 // IdentExpr refers to a value by name.
 type IdentExpr struct {
 	Base

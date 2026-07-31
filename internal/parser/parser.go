@@ -72,9 +72,38 @@ func (p *Parser) program() *ast.Program {
 	return out
 }
 func (p *Parser) isDeclStart() bool {
-	return p.check(token.Type) || p.check(token.Func) || p.check(token.Var)
+	return p.check(token.Type) || p.check(token.Func) || p.check(token.Var) || p.check(token.Export) || p.check(token.Import)
 }
 func (p *Parser) declaration() ast.Decl {
+	if p.match(token.Export) {
+		start := p.previous()
+		var target ast.Node
+		if p.isDeclStart() {
+			target = p.declaration()
+		} else {
+			target = p.statement()
+		}
+		span := start.Span
+		if target != nil {
+			span = merge(start.Span, target.GetSpan())
+		}
+		return &ast.ExportStmt{Base: ast.Base{Span: span}, Target: target}
+	}
+
+	if p.match(token.Import) {
+		start := p.previous()
+		var path string
+		if p.match(token.String) {
+			path = p.previous().Literal.(string)
+		} else if p.match(token.Ident) {
+			path = p.previous().Lexeme
+		} else {
+			p.err(p.peek(), "expected module path or identifier after import")
+		}
+		end := p.consume(token.Semicolon, "expected ';' after import statement")
+		return &ast.ImportStmt{Base: ast.Base{Span: merge(start.Span, end.Span)}, Path: path}
+	}
+
 	if p.match(token.Type) {
 		return p.structDecl()
 	}
@@ -200,6 +229,35 @@ func (p *Parser) typeStart() bool {
 }
 
 func (p *Parser) statement() ast.Stmt {
+	if p.match(token.Export) {
+		start := p.previous()
+		var target ast.Node
+		if p.isDeclStart() {
+			target = p.declaration()
+		} else {
+			target = p.statement()
+		}
+		span := start.Span
+		if target != nil {
+			span = merge(start.Span, target.GetSpan())
+		}
+		return &ast.ExportStmt{Base: ast.Base{Span: span}, Target: target}
+	}
+
+	if p.match(token.Import) {
+		start := p.previous()
+		var path string
+		if p.match(token.String) {
+			path = p.previous().Literal.(string)
+		} else if p.match(token.Ident) {
+			path = p.previous().Lexeme
+		} else {
+			p.err(p.peek(), "expected module path or identifier after import")
+		}
+		end := p.consume(token.Semicolon, "expected ';' after import statement")
+		return &ast.ImportStmt{Base: ast.Base{Span: merge(start.Span, end.Span)}, Path: path}
+	}
+
 	if p.match(token.Var) {
 		v := p.varDecl(p.previous())
 

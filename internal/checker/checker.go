@@ -248,9 +248,19 @@ func Check(program *ast.Program) (*Info, []diagnostic.Diagnostic) {
 
 	return c.info, nil
 }
+
+func unwrapDecl(d ast.Decl) ast.Decl {
+	if exp, ok := d.(*ast.ExportStmt); ok {
+		if inner, ok := exp.Target.(ast.Decl); ok {
+			return unwrapDecl(inner)
+		}
+	}
+	return d
+}
+
 func (c *Checker) declare(p *ast.Program) {
 	for _, d := range p.Decls {
-		if s, ok := d.(*ast.StructDecl); ok {
+		if s, ok := unwrapDecl(d).(*ast.StructDecl); ok {
 			if s.Name == "main" {
 				c.err(s, "reserved name main")
 			}
@@ -263,7 +273,7 @@ func (c *Checker) declare(p *ast.Program) {
 	}
 
 	for _, d := range p.Decls {
-		if x, ok := d.(*ast.VarDecl); ok {
+		if x, ok := unwrapDecl(d).(*ast.VarDecl); ok {
 			if x.Name == "main" {
 				c.err(x, "reserved name main")
 			}
@@ -282,7 +292,7 @@ func (c *Checker) declare(p *ast.Program) {
 	}
 
 	for _, d := range p.Decls {
-		if x, ok := d.(*ast.FuncDecl); ok {
+		if x, ok := unwrapDecl(d).(*ast.FuncDecl); ok {
 			if x.Name == "main" {
 				c.err(x, "reserved name main")
 				continue
@@ -319,7 +329,7 @@ func (c *Checker) declare(p *ast.Program) {
 }
 func (c *Checker) defineStructs(p *ast.Program) {
 	for _, d := range p.Decls {
-		if x, ok := d.(*ast.StructDecl); ok {
+		if x, ok := unwrapDecl(d).(*ast.StructDecl); ok {
 			s := c.info.structs[x.Name]
 
 			for _, f := range x.Fields {
@@ -337,7 +347,7 @@ func (c *Checker) defineStructs(p *ast.Program) {
 }
 func (c *Checker) checkProgram(p *ast.Program) {
 	for _, d := range p.Decls {
-		switch x := d.(type) {
+		switch x := unwrapDecl(d).(type) {
 		case *ast.VarDecl:
 			if x.Init != nil {
 				c.expect(x.Init, c.info.globals[x.Name], "initializer")
@@ -488,6 +498,17 @@ func (c *Checker) stmt(s ast.Stmt) {
 				c.require(c.expr(x.Value), c.current.Result, x.Value, "return value")
 			}
 		}
+	case *ast.ExportStmt:
+		if targetStmt, ok := x.Target.(ast.Stmt); ok {
+			c.stmt(targetStmt)
+		}
+		if varDecl, ok := x.Target.(*ast.VarDecl); ok {
+			if sym, ok := c.scope.values[varDecl.Name]; ok && c.scope.parent != nil {
+				c.scope.parent.put(sym)
+			}
+		}
+	case *ast.ImportStmt:
+		// Module scaffolding (no-op in checker)
 	}
 }
 func (c *Checker) block(b *ast.BlockStmt, nested bool) { c.blockStmts(b.Stmts, nested) }

@@ -47,7 +47,9 @@ cannot be nested.
 
 Zing supports local variables, assignment, expression statements, blocks,
 `if`/`else`, non-fallthrough `switch`, while-style `for`, three-clause `for`,
-`break`, `continue`, and `return`.
+`break`, `continue`, `return`, `export`, and `import`.
+
+`export` expands the scope of symbols by upgrading a symbol's lexical scope up one level (up to module/global scope). `import` is reserved for importing external modules (emitting a warning that multi-file/module support is pending).
 
 ```zing
 for value > 0 {

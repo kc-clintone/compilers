@@ -126,11 +126,45 @@ func runSource(ctx context.Context, source string, options Options) (string, err
 	info, diagnostics := checker.Check(program)
 	if len(diagnostics) != 0 {
 		return "", fmt.Errorf("check: %v", diagnostics)
-	}
 	var output bytes.Buffer
 	options.Stdout = &output
 	err := Run(ctx, program, info, options)
 	return output.String(), err
+}
+
+func TestExportScopeUpgrading(t *testing.T) {
+	source := `
+export var x int = 100;
+func foo() {
+	export var y int = 200;
+}
+foo();
+print(x, y);
+`
+	output, err := runSource(context.Background(), source, Options{})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if got, want := output, "100 200\n"; got != want {
+		t.Fatalf("output = %q, want %q", got, want)
+	}
+}
+
+func TestRunREPL(t *testing.T) {
+	input := "var a int = 10;\na + 5;\nexit\n"
+	var outBuf, errBuf bytes.Buffer
+	options := Options{
+		Stdin:  strings.NewReader(input),
+		Stdout: &outBuf,
+		Stderr: &errBuf,
+	}
+	err := RunREPL(context.Background(), nil, nil, options)
+	if err != nil {
+		t.Fatalf("unexpected REPL error: %v", err)
+	}
+	if !strings.Contains(outBuf.String(), "15") {
+		t.Fatalf("REPL output = %q, want it to contain 15", outBuf.String())
+	}
 }
 
 type memoryFiles struct{ data map[string][]byte }

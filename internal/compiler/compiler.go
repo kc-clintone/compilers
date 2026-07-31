@@ -133,6 +133,14 @@ func (g *generator) decl(d ast.Decl) {
 		}
 
 		g.rawBlockEnd()
+	case *ast.ExportStmt:
+		if decl, ok := x.Target.(ast.Decl); ok {
+			g.decl(decl)
+		} else if stmt, ok := x.Target.(ast.Stmt); ok {
+			g.stmt(stmt)
+		}
+	case *ast.ImportStmt:
+		// No-op for imports
 	}
 }
 func (g *generator) stmt(s ast.Stmt) {
@@ -225,13 +233,21 @@ func (g *generator) stmt(s ast.Stmt) {
 		g.indent--
 		g.line("}")
 	case *ast.ForStmt:
-		if x.Init == nil {
+		if x.Init == nil && x.Post == nil {
 			g.line("for " + g.expr(x.Cond) + " {")
 		} else {
-			v := x.Init.(*ast.VarDecl)
-			post := x.Post.(*ast.AssignStmt)
-
-			g.line("for " + name(v.Name) + " := " + g.expr(v.Init) + "; " + g.expr(x.Cond) + "; " + g.expr(post.Target) + " = " + g.expr(post.Value) + " {")
+			initStr, postStr := "", ""
+			if x.Init != nil {
+				if v, ok := x.Init.(*ast.VarDecl); ok {
+					initStr = name(v.Name) + " := " + g.expr(v.Init)
+				}
+			}
+			if x.Post != nil {
+				if a, ok := x.Post.(*ast.AssignStmt); ok {
+					postStr = g.expr(a.Target) + " = " + g.expr(a.Value)
+				}
+			}
+			g.line("for " + initStr + "; " + g.expr(x.Cond) + "; " + postStr + " {")
 		}
 
 		g.indent++
@@ -251,6 +267,14 @@ func (g *generator) stmt(s ast.Stmt) {
 		g.line("break")
 	case *ast.ContinueStmt:
 		g.line("continue")
+	case *ast.ExportStmt:
+		if stmt, ok := x.Target.(ast.Stmt); ok {
+			g.stmt(stmt)
+		} else if decl, ok := x.Target.(ast.Decl); ok {
+			g.decl(decl)
+		}
+	case *ast.ImportStmt:
+		// No-op for imports
 	}
 }
 func (g *generator) ifInline(x *ast.IfStmt) {

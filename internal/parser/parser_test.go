@@ -100,6 +100,26 @@ func TestParserRecoversMultipleDiagnostics(t *testing.T) {
 	}
 }
 
+func TestParseExportAndImport(t *testing.T) {
+	source := `import "math";
+export var x int = 10;
+export func add(a int, b int) int { export var res int = a + b; return res; }
+`
+	program, diagnostics := Parse("module.zing", []byte(source))
+	if len(diagnostics) != 0 {
+		t.Fatalf("unexpected diagnostics: %v", diagnostics)
+	}
+	if len(program.Decls) != 3 {
+		t.Fatalf("got %d decls, want 3", len(program.Decls))
+	}
+	if _, ok := program.Decls[0].(*ast.ImportStmt); !ok {
+		t.Fatalf("decl[0] is %T, want *ast.ImportStmt", program.Decls[0])
+	}
+	if _, ok := program.Decls[1].(*ast.ExportStmt); !ok {
+		t.Fatalf("decl[1] is %T, want *ast.ExportStmt", program.Decls[1])
+	}
+}
+
 func FuzzParse(f *testing.F) {
 	for _, seed := range []string{"", "var x int = 1;", "if true { print(1); }", "\xff\x00"} {
 		f.Add(seed)

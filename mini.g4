@@ -6,7 +6,12 @@ declaration
     : varDecl ';'
     | structDecl
     | funcDecl
+    | exportDecl
     ;
+
+exportDecl: 'export' (varDecl ';' | structDecl | funcDecl);
+importStmt: 'import' (STRING | ID) ';';
+exportStmt: 'export' statement;
 
 varDecl: 'var' ID type ('=' expression)?;
 structDecl: 'type' ID 'struct' '{' structField* '}';
@@ -34,6 +39,8 @@ statement
     | 'break' ';'
     | 'continue' ';'
     | returnStmt ';'
+    | importStmt
+    | exportStmt
     | expression ';'
     | block
     ;
