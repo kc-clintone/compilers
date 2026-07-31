@@ -20,6 +20,7 @@ import (
 type Streams struct {
 	Stdout io.Writer
 	Stderr io.Writer
+	Stdin  io.Reader
 }
 
 func (streams Streams) normalized() Streams {
@@ -29,6 +30,9 @@ func (streams Streams) normalized() Streams {
 	if streams.Stderr == nil {
 		streams.Stderr = io.Discard
 	}
+	if streams.Stdin == nil {
+		streams.Stdin = os.Stdin
+	}
 	return streams
 }
 
@@ -36,18 +40,51 @@ func (streams Streams) normalized() Streams {
 // code without terminating the host process.
 func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
-	if len(args) < 1 {
-		interpreterUsage(streams.Stderr)
-		return 2
+	if len(args) == 0 {
+		if err := interpreter.RunREPL(ctx, nil, nil, interpreter.Options{Stdout: streams.Stdout, Stderr: streams.Stderr, Stdin: streams.Stdin}); err != nil {
+			fmt.Fprintln(streams.Stderr, err)
+			return 1
+		}
+		return 0
+	}
+	if args[0] == "--repl" {
+		files := args[1:]
+		var initialPrograms []*ast.Program
+		var initialInfos []*checker.Info
+		warned := false
+		if len(files) > 1 {
+			fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
+			warned = true
+		}
+		for _, file := range files {
+			prog, info, ok := frontEnd(file, streams.Stderr)
+			if !ok {
+				return 1
+			}
+			if !warned && hasModuleFeatures(prog) {
+				fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
+				warned = true
+			}
+			initialPrograms = append(initialPrograms, prog)
+			initialInfos = append(initialInfos, info)
+		}
+		if err := interpreter.RunREPL(ctx, initialPrograms, initialInfos, interpreter.Options{Stdout: streams.Stdout, Stderr: streams.Stderr, Stdin: streams.Stdin}); err != nil {
+			fmt.Fprintln(streams.Stderr, err)
+			return 1
+		}
+		return 0
 	}
 	if args[0] == "check" {
 		if len(args) != 2 {
 			interpreterUsage(streams.Stderr)
 			return 2
 		}
-		_, _, ok := frontEnd(args[1], streams.Stderr)
+		prog, _, ok := frontEnd(args[1], streams.Stderr)
 		if !ok {
 			return 1
+		}
+		if hasModuleFeatures(prog) {
+			fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
 		}
 		return 0
 	}
@@ -65,7 +102,10 @@ func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	if !ok {
 		return 1
 	}
-	if err := interpreter.Run(ctx, program, info, interpreter.Options{Args: programArgs, Stdout: streams.Stdout}); err != nil {
+	if hasModuleFeatures(program) {
+		fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
+	}
+	if err := interpreter.Run(ctx, program, info, interpreter.Options{Args: programArgs, Stdout: streams.Stdout, Stderr: streams.Stderr, Stdin: streams.Stdin}); err != nil {
 		fmt.Fprintln(streams.Stderr, err)
 		return 1
 	}
@@ -85,9 +125,12 @@ func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 			compilerUsage(streams.Stderr)
 			return 2
 		}
-		_, _, ok := frontEnd(args[1], streams.Stderr)
+		prog, _, ok := frontEnd(args[1], streams.Stderr)
 		if !ok {
 			return 1
+		}
+		if hasModuleFeatures(prog) {
+			fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
 		}
 		return 0
 	}
@@ -106,6 +149,9 @@ func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 	program, info, valid := frontEnd(input, streams.Stderr)
 	if !valid {
 		return 1
+	}
+	if hasModuleFeatures(program) {
+		fmt.Fprintln(streams.Stderr, "warning: multiple files/modules have yet to be implemented")
 	}
 	source, err := compiler.Generate(program, info)
 	if err != nil {
@@ -147,6 +193,29 @@ func frontEnd(filename string, stderr io.Writer) (*ast.Program, *checker.Info, b
 	return program, info, true
 }
 
+func hasModuleFeatures(program *ast.Program) bool {
+	if program == nil {
+		return false
+	}
+	for _, d := range program.Decls {
+		if _, ok := d.(*ast.ExportStmt); ok {
+			return true
+		}
+		if _, ok := d.(*ast.ImportStmt); ok {
+			return true
+		}
+	}
+	for _, s := range program.Stmts {
+		if _, ok := s.(*ast.ExportStmt); ok {
+			return true
+		}
+		if _, ok := s.(*ast.ImportStmt); ok {
+			return true
+		}
+	}
+	return false
+}
+
 func outputArgs(args []string, stderr io.Writer) (string, string, bool) {
 	if len(args) != 3 || args[0] != "-o" || args[1] == "" || args[2] == "" {
 		return "", "", false
@@ -161,7 +230,7 @@ func outputArgs(args []string, stderr io.Writer) (string, string, bool) {
 }
 
 func interpreterUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: zing-interpreter check <file> | zing-interpreter <file> [-- program-args...]")
+	fmt.Fprintln(stderr, "usage: zing-interpreter [--repl [files...]] | zing-interpreter check <file> | zing-interpreter <file> [-- program-args...]")
 }
 
 func compilerUsage(stderr io.Writer) {

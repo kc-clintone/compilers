@@ -14,24 +14,27 @@ func TestInterpreterCommandsAndExitCodes(t *testing.T) {
 	valid := writeSource(t, `var values []string = args(); print(len(values), values[0]);`)
 	invalid := writeSource(t, `var value int = "wrong";`)
 	tests := []struct {
-		name string
-		args []string
-		code int
-		out  string
-		err  string
+		name  string
+		args  []string
+		stdin string
+		code  int
+		out   string
+		err   string
 	}{
-		{"check", []string{"check", valid}, 0, "", ""},
-		{"run", []string{valid, "--", "hello"}, 0, "1 hello\n", ""},
-		{"source error", []string{"check", invalid}, 1, "", "checker:"},
-		{"missing command", nil, 2, "", "usage: zing-interpreter"},
-		{"arguments need separator", []string{valid, "hello"}, 2, "", "usage: zing-interpreter"},
+		{"check", []string{"check", valid}, "", 0, "", ""},
+		{"run", []string{valid, "--", "hello"}, "", 0, "1 hello\n", ""},
+		{"default repl", nil, "1 + 2;\nexit\n", 0, "3\n", ""},
+		{"--repl mode", []string{"--repl", valid}, "exit\n", 0, "", ""},
+		{"source error", []string{"check", invalid}, "", 1, "", "checker:"},
+		{"arguments need separator", []string{valid, "hello"}, "", 2, "", "usage: zing-interpreter"},
 	}
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
-			code := RunInterpreter(context.Background(), test.args, Streams{Stdout: &stdout, Stderr: &stderr})
-			if code != test.code || stdout.String() != test.out || !strings.Contains(stderr.String(), test.err) {
+			stdin := strings.NewReader(test.stdin)
+			code := RunInterpreter(context.Background(), test.args, Streams{Stdout: &stdout, Stderr: &stderr, Stdin: stdin})
+			if code != test.code || !strings.Contains(stdout.String(), test.out) || !strings.Contains(stderr.String(), test.err) {
 				t.Fatalf("code=%d stdout=%q stderr=%q", code, stdout.String(), stderr.String())
 			}
 		})
@@ -83,6 +86,17 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 				t.Fatalf("code=%d stderr=%q", code, stderr.String())
 			}
 		})
+	}
+}
+
+func TestModuleWarning(t *testing.T) {
+	file1 := writeSource(t, `export var x int = 1;`)
+	file2 := writeSource(t, `import "math";`)
+	var stdout, stderr bytes.Buffer
+
+	code := RunInterpreter(context.Background(), []string{"--repl", file1, file2}, Streams{Stdout: &stdout, Stderr: &stderr, Stdin: strings.NewReader("exit\n")})
+	if code != 0 || !strings.Contains(stderr.String(), "warning: multiple files/modules have yet to be implemented") {
+		t.Fatalf("code=%d stderr=%q", code, stderr.String())
 	}
 }
 
