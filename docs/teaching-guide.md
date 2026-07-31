@@ -68,7 +68,8 @@ expected results without running the Go toolchain.
 
 ## Suggested teaching variations
 
-- Focus on the lexer and Pratt parser for an introductory front-end lesson.
+- Focus on the lexer and pure Recursive Descent parser for an introductory front-end lesson.
+
 - Compare AST identity with the node-ID-keyed checker information for a lesson
   on keeping syntax and semantics separate.
 - Add a runtime-error fixture and compare interpreter and compiled diagnostics.

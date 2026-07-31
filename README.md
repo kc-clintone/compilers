@@ -59,7 +59,8 @@ source -> lexer -> parser/AST -> static checker -> interpreter
 The matching stages live under `internal/`. The checker produces immutable
 node-ID-keyed type, symbol, struct, and built-in resolutions consumed by both
 back ends. `mini.g4` remains a readable parser-generator reference; production
-builds use the handwritten lexer and Pratt/recursive-descent parser.
+builds use the handwritten lexer and a pure **Recursive Descent** parser for expressions to maximize readability for learners.
+
 
 Tests include lexer and parser fuzz targets, semantic and runtime unit tests,
 generated-Go tests, both CLI contracts, and interpreter-versus-compiled
