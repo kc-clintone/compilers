@@ -58,10 +58,10 @@ $ ./nuru-compiler --help
 Nuru Compiler (Workshop Edition)
 
 Usage:
-  nuru-compiler [-o binary] <file.nuru>   Compile Nuru program to native executable (default)
+  nuru-compiler [-o binary] <file.nuru>   Compile to a native executable (default: ./nuru.out)
   nuru-compiler tokens <file.nuru>         Inspect Lexer token stream
   nuru-compiler ast <file.nuru>            Inspect Parser AST tree
-  nuru-compiler transpile [-o out.go] <f> Transpile Nuru program to Go source
+  nuru-compiler transpile [-o out.go] <f> Transpile to Go (default: ./<input-basename>.go)
   nuru-compiler -h, --help                 Show help message
 ```
 
