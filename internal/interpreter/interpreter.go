@@ -1,4 +1,4 @@
-// Package interpreter executes checked Zing syntax trees.
+// Package interpreter executes checked Nuru syntax trees.
 package interpreter
 
 import (
@@ -14,7 +14,7 @@ import (
 	"github.com/kc-clintone/compilers/internal/source"
 )
 
-// FileSystem is the complete-file I/O boundary used by Zing built-ins.
+// FileSystem is the complete-file I/O boundary used by Nuru built-ins.
 type FileSystem interface {
 	ReadFile(string) ([]byte, error)
 	WriteFile(string, []byte, os.FileMode) error
@@ -39,46 +39,46 @@ type Options struct {
 	Files  FileSystem
 }
 
-// RuntimeError is a source-located failure raised while executing Zing code.
+// RuntimeError is a source-located failure raised while executing Nuru code.
 type RuntimeError struct {
 	Span    source.Span
 	Message string
 }
 
-// Error formats the runtime error as a stable Zing diagnostic.
+// Error formats the runtime error as a stable Nuru diagnostic.
 func (e *RuntimeError) Error() string { return fmt.Sprintf("%s: runtime: %s", e.Span, e.Message) }
 
-type value interface{ zingValue() }
+type value interface{ nuruValue() }
 type intValue int
 type charValue byte
 type stringValue string
 type boolValue bool
 
-func (intValue) zingValue()    {}
-func (charValue) zingValue()   {}
-func (stringValue) zingValue() {}
-func (boolValue) zingValue()   {}
+func (intValue) nuruValue()    {}
+func (charValue) nuruValue()   {}
+func (stringValue) nuruValue() {}
+func (boolValue) nuruValue()   {}
 
 type sliceValue struct {
 	element checker.Type
 	items   []value
 }
 
-func (sliceValue) zingValue() {}
+func (sliceValue) nuruValue() {}
 
 type mapValue struct {
 	key, element checker.Type
 	items        map[value]value
 }
 
-func (*mapValue) zingValue() {}
+func (*mapValue) nuruValue() {}
 
 type structValue struct {
 	name   string
 	fields map[string]value
 }
 
-func (*structValue) zingValue() {}
+func (*structValue) nuruValue() {}
 
 type environment struct {
 	parent *environment

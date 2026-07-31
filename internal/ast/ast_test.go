@@ -9,7 +9,7 @@ import (
 
 func TestBaseExposesIdentityAndSpan(t *testing.T) {
 	span := source.Span{
-		Filename: "program.zing",
+		Filename: "program.nuru",
 		Start:    source.Position{Offset: 4, Line: 2, Column: 3},
 		End:      source.Position{Offset: 8, Line: 2, Column: 7},
 	}
@@ -85,7 +85,7 @@ func TestDebugExpr(t *testing.T) {
 }
 
 func TestAssignNodeIDsPreservesSpans(t *testing.T) {
-	span := source.Span{Filename: "span.zing", Start: source.Position{Offset: 1, Line: 1, Column: 2}}
+	span := source.Span{Filename: "span.nuru", Start: source.Position{Offset: 1, Line: 1, Column: 2}}
 	program := &Program{Base: Base{Span: span}}
 	AssignNodeIDs(program)
 	if !reflect.DeepEqual(program.GetSpan(), span) {

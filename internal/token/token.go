@@ -1,4 +1,4 @@
-// Package token defines the lexical vocabulary of Zing.
+// Package token defines the lexical vocabulary of Nuru.
 package token
 
 import "github.com/kc-clintone/compilers/internal/source"
@@ -6,7 +6,7 @@ import "github.com/kc-clintone/compilers/internal/source"
 // Kind identifies one lexical token category.
 type Kind string
 
-// Zing token kinds.
+// Nuru token kinds.
 const (
 	EOF          Kind = "EOF"
 	Invalid      Kind = "INVALID"

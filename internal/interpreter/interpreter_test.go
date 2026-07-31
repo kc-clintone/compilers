@@ -101,7 +101,7 @@ func TestRuntimeErrorsCarrySourceSpans(t *testing.T) {
 			if !errors.As(err, &runtimeErr) || !strings.Contains(runtimeErr.Message, test.message) {
 				t.Fatalf("error = %v, want runtime error containing %q", err, test.message)
 			}
-			if runtimeErr.Span.Filename != "test.zing" || runtimeErr.Span.Start.Line < 1 || runtimeErr.Span.Start.Column < 1 {
+			if runtimeErr.Span.Filename != "test.nuru" || runtimeErr.Span.Start.Line < 1 || runtimeErr.Span.Start.Column < 1 {
 				t.Fatalf("runtime span = %v", runtimeErr.Span)
 			}
 		})
@@ -119,7 +119,7 @@ func TestCancellationStopsInfiniteLoop(t *testing.T) {
 }
 
 func runSource(ctx context.Context, source string, options Options) (string, error) {
-	program, diagnostics := parser.Parse("test.zing", []byte(source))
+	program, diagnostics := parser.Parse("test.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		return "", fmt.Errorf("parse: %v", diagnostics)
 	}

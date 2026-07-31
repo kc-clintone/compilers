@@ -1,4 +1,4 @@
-// Package diagnostic defines source-located diagnostics shared by the Zing
+// Package diagnostic defines source-located diagnostics shared by the Nuru
 // front end and runtime.
 package diagnostic
 
@@ -16,7 +16,7 @@ type Diagnostic struct {
 	Message string
 }
 
-// Error formats a diagnostic using Zing's stable user-facing representation.
+// Error formats a diagnostic using Nuru's stable user-facing representation.
 func (d Diagnostic) Error() string {
 	return fmt.Sprintf("%s: %s: %s", d.Span, d.Phase, d.Message)
 }

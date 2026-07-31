@@ -1,4 +1,4 @@
-// Package parser implements Zing's handwritten recursive-descent/Pratt parser.
+// Package parser implements Nuru's handwritten recursive-descent/Pratt parser.
 package parser
 
 import (

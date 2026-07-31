@@ -13,7 +13,7 @@ import (
 	"testing"
 
 	"github.com/kc-clintone/compilers/internal/checker"
-	zingparser "github.com/kc-clintone/compilers/internal/parser"
+	nuruparser "github.com/kc-clintone/compilers/internal/parser"
 )
 
 func TestGenerateIsFormattedDeterministicAndParsable(t *testing.T) {
@@ -34,7 +34,7 @@ print(double(box.value));`
 	if _, err := parser.ParseFile(token.NewFileSet(), "main.go", first, parser.AllErrors); err != nil {
 		t.Fatalf("generated source does not parse: %v\n%s", err, first)
 	}
-	for _, fragment := range []string{"type z_Box struct", "func z_double", "func main()", "zingPrint"} {
+	for _, fragment := range []string{"type z_Box struct", "func z_double", "func main()", "nuruPrint"} {
 		if !bytes.Contains(first, []byte(fragment)) {
 			t.Fatalf("generated source does not contain %q\n%s", fragment, first)
 		}
@@ -43,12 +43,12 @@ print(double(box.value));`
 
 func TestGenerateSelectsOnlyRequiredHelpersAndImports(t *testing.T) {
 	plain := generateSource(t, `var value int = 1; value = value + 1;`)
-	if bytes.Contains(plain, []byte("import (")) || bytes.Contains(plain, []byte("zingFail")) {
+	if bytes.Contains(plain, []byte("import (")) || bytes.Contains(plain, []byte("nuruFail")) {
 		t.Fatalf("plain program has unused runtime code:\n%s", plain)
 	}
 
 	runtime := generateSource(t, `var values []int = []int{4}; print(values[0], 4 / 2, char(65), int("2"));`)
-	for _, fragment := range []string{"zingIndexSlice", "zingDiv", "zingChar", "zingAtoi", "zingFail", `"reflect"`, `"strconv"`} {
+	for _, fragment := range []string{"nuruIndexSlice", "nuruDiv", "nuruChar", "nuruAtoi", "nuruFail", `"reflect"`, `"strconv"`} {
 		if !bytes.Contains(runtime, []byte(fragment)) {
 			t.Fatalf("runtime program does not contain %q\n%s", fragment, runtime)
 		}
@@ -92,7 +92,7 @@ func TestBuildReportsToolchainAndCancellationErrors(t *testing.T) {
 
 func generateSource(t *testing.T, source string) []byte {
 	t.Helper()
-	program, diagnostics := zingparser.Parse("test.zing", []byte(source))
+	program, diagnostics := nuruparser.Parse("test.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse: %v", diagnostics)
 	}

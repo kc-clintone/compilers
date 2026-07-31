@@ -1,4 +1,4 @@
-// Package checker resolves names and statically checks Zing programs.
+// Package checker resolves names and statically checks Nuru programs.
 package checker
 
 import (
@@ -9,7 +9,7 @@ import (
 	"github.com/kc-clintone/compilers/internal/source"
 )
 
-// Type is a resolved Zing type.
+// Type is a resolved Nuru type.
 type Type struct {
 	Kind      ast.TypeKind
 	Name      string
@@ -64,7 +64,7 @@ const (
 	BuiltinString    Builtin = "string"
 )
 
-// String returns the Zing spelling of t.
+// String returns the Nuru spelling of t.
 func (t Type) String() string {
 	switch t.Kind {
 	case ast.TypeInt:
@@ -88,7 +88,7 @@ func (t Type) String() string {
 	return "<invalid>"
 }
 
-// Equal reports whether t and u are identical Zing types. Invalid is treated
+// Equal reports whether t and u are identical Nuru types. Invalid is treated
 // as compatible to suppress cascading diagnostics.
 func (t Type) Equal(u Type) bool {
 	if t.Kind == ast.TypeInvalid || u.Kind == ast.TypeInvalid {

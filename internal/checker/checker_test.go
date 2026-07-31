@@ -10,7 +10,7 @@ import (
 )
 
 func TestZeroArgumentBuiltin(t *testing.T) {
-	program, diagnostics := parser.Parse("args.zing", []byte("var values []string = args(); print(len(values));"))
+	program, diagnostics := parser.Parse("args.nuru", []byte("var values []string = args(); print(len(values));"))
 
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse diagnostics: %v", diagnostics)
@@ -124,7 +124,7 @@ print(value);`)
 
 func mustParse(t *testing.T, source string) *ast.Program {
 	t.Helper()
-	program, diagnostics := parser.Parse("test.zing", []byte(source))
+	program, diagnostics := parser.Parse("test.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse diagnostics: %v", diagnostics)
 	}

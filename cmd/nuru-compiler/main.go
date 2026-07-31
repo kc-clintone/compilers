@@ -1,4 +1,4 @@
-// Command zing-interpreter checks and directly executes Zing programs.
+// Command nuru-compiler checks, transpiles, and builds Nuru programs.
 package main
 
 import (
@@ -12,5 +12,5 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer stop()
-	os.Exit(cli.RunInterpreter(ctx, os.Args[1:], cli.Streams{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}))
+	os.Exit(cli.RunCompiler(ctx, os.Args[1:], cli.Streams{Stdout: os.Stdout, Stderr: os.Stderr}))
 }

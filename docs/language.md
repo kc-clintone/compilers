@@ -1,13 +1,13 @@
-# Zing v1 language reference
+# Nuru v1 language reference
 
-Zing is a small, statically typed language. A source file contains type,
+Nuru is a small, statically typed language. A source file contains type,
 function, and global-variable declarations followed by executable top-level
 statements. The interpreter executes those statements directly; the compiler
 places them in generated Go `main`.
 
 ## Lexical structure
 
-Files use the `.zing` extension. Identifiers contain ASCII letters, digits, and
+Files use the `.nuru` extension. Identifiers contain ASCII letters, digits, and
 underscores and cannot start with a digit. `main` is reserved everywhere, and
 built-in names cannot be redeclared in the value namespace. Whitespace, `//`
 line comments, and non-nesting `/* ... */` comments are ignored.
@@ -22,7 +22,7 @@ Primitive types are `int`, `char`, `string`, and `bool`. Composite types are
 slices (`[]T`), maps (`map[K]V`), and named structs. Map keys are restricted to
 primitive types. Characters and all string indexing/slicing are byte-oriented.
 
-```zing
+```nuru
 type Token struct {
     text string;
     line int;
@@ -45,13 +45,13 @@ cannot be nested.
 
 ## Statements and expressions
 
-Zing supports local variables, assignment, expression statements, blocks,
+Nuru supports local variables, assignment, expression statements, blocks,
 `if`/`else`, non-fallthrough `switch`, while-style `for`, three-clause `for`,
 `break`, `continue`, `return`, `export`, and `import`.
 
 `export` expands the scope of symbols by upgrading a symbol's lexical scope up one level (up to module/global scope). `import` is reserved for importing external modules (emitting a warning that multi-file/module support is pending).
 
-```zing
+```nuru
 for value > 0 {
     value = value - 1;
 }
@@ -94,6 +94,6 @@ Diagnostics use `file:line:column: phase: message`, where phase is `lexer`,
 `parser`, `checker`, or `runtime`. A phase does not run after its prerequisite
 reports errors.
 
-Use `zing-interpreter` (or `zing-interpreter check`) for direct execution and
-`zing-compiler` (or `zing-compiler check/transpile`) for Go generation. Both tools return 0 on
+Use `nuru-interpreter` (or `nuru-interpreter check`) for direct execution and
+`nuru-compiler` (or `nuru-compiler check/transpile`) for Go generation. Both tools return 0 on
 success, 1 for program/build failures, and 2 for invalid usage.

@@ -19,7 +19,7 @@ import (
 func TestInterpreterAndCompiledProgramsAgree(t *testing.T) {
 	root := filepath.Join("..", "..", "examples")
 
-	for _, file := range []string{"01-basics.zing", "02-control-flow.zing", "03-collections.zing", "04-functions.zing", "05-files.zing", "source-analyzer.zing"} {
+	for _, file := range []string{"01-basics.nuru", "02-control-flow.nuru", "03-collections.nuru", "04-functions.nuru", "05-files.nuru", "source-analyzer.nuru"} {
 		t.Run(file, func(t *testing.T) {
 			source, err := os.ReadFile(filepath.Join(root, file))
 			if err != nil {
@@ -46,12 +46,12 @@ func TestInterpreterAndCompiledProgramsAgree(t *testing.T) {
 			var interpretedFile, compiledFile string
 
 			switch file {
-			case "05-files.zing":
+			case "05-files.nuru":
 				interpretedFile = filepath.Join(t.TempDir(), "interpreted.txt")
 				compiledFile = filepath.Join(t.TempDir(), "compiled.txt")
 				programArgs = []string{filepath.Join(root, "fixtures", "sample.txt"), interpretedFile}
-			case "source-analyzer.zing":
-				programArgs = []string{filepath.Join(root, "fixtures", "analyzer-input.zing")}
+			case "source-analyzer.nuru":
+				programArgs = []string{filepath.Join(root, "fixtures", "analyzer-input.nuru")}
 			}
 
 			if err := interpreter.Run(ctx, program, info, interpreter.Options{Args: programArgs, Stdout: &interpreted}); err != nil {
@@ -71,7 +71,7 @@ func TestInterpreterAndCompiledProgramsAgree(t *testing.T) {
 
 			compiledArgs := programArgs
 
-			if file == "05-files.zing" {
+			if file == "05-files.nuru" {
 				compiledArgs = []string{programArgs[0], compiledFile}
 			}
 
@@ -93,7 +93,7 @@ func TestInterpreterAndCompiledProgramsAgree(t *testing.T) {
 				t.Fatalf("unexpected output\nwant: %q\ngot:  %q", expected, output)
 			}
 
-			if file == "05-files.zing" {
+			if file == "05-files.nuru" {
 				want, _ := os.ReadFile(programArgs[0])
 				gotInterpreter, err := os.ReadFile(interpretedFile)
 				if err != nil || !bytes.Equal(gotInterpreter, want) {
@@ -124,7 +124,7 @@ func TestRuntimeFailuresAgree(t *testing.T) {
 
 	for name, source := range tests {
 		t.Run(name, func(t *testing.T) {
-			program, diagnostics := parser.Parse("runtime.zing", []byte(source))
+			program, diagnostics := parser.Parse("runtime.nuru", []byte(source))
 			if len(diagnostics) != 0 {
 				t.Fatalf("parse: %v", diagnostics)
 			}
@@ -162,11 +162,11 @@ func TestRuntimeFailuresAgree(t *testing.T) {
 
 func TestSourceAnalyzerFallbackIsCurrent(t *testing.T) {
 	root := filepath.Join("..", "..", "examples")
-	source, err := os.ReadFile(filepath.Join(root, "source-analyzer.zing"))
+	source, err := os.ReadFile(filepath.Join(root, "source-analyzer.nuru"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	program, diagnostics := parser.Parse("examples/source-analyzer.zing", source)
+	program, diagnostics := parser.Parse("examples/source-analyzer.nuru", source)
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse: %v", diagnostics)
 	}
@@ -183,6 +183,6 @@ func TestSourceAnalyzerFallbackIsCurrent(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !bytes.Equal(generated, fallback) {
-		t.Fatal("checked-in source analyzer fallback is stale; regenerate it with zing-compiler")
+		t.Fatal("checked-in source analyzer fallback is stale; regenerate it with nuru-compiler")
 	}
 }

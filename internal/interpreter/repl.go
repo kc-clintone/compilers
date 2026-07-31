@@ -1,4 +1,4 @@
-// Package interpreter executes checked Zing syntax trees.
+// Package interpreter executes checked Nuru syntax trees.
 package interpreter
 
 import (
@@ -49,7 +49,7 @@ func RunREPL(ctx context.Context, initialPrograms []*ast.Program, initialInfos [
 			return ctx.Err()
 		}
 
-		fmt.Fprint(options.Stdout, "zing> ")
+		fmt.Fprint(options.Stdout, "nuru> ")
 		if !scanner.Scan() {
 			break
 		}

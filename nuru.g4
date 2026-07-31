@@ -1,4 +1,4 @@
-grammar Zing;
+grammar Nuru;
 
 program: declaration* statement* EOF;
 

@@ -11,7 +11,7 @@ func TestControlFlowBraceIsNotNamedComposite(t *testing.T) {
 switch value { case 1: print("one"); default: print("other"); }
 for value > 0 { value = value - 1; }
 `)
-	program, diagnostics := Parse("control.zing", source)
+	program, diagnostics := Parse("control.nuru", source)
 
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
@@ -23,7 +23,7 @@ for value > 0 { value = value - 1; }
 }
 
 func TestMisplacedDeclarationProducesDiagnostic(t *testing.T) {
-	_, diagnostics := Parse("ordering.zing", []byte("print(1); var later int = 2;"))
+	_, diagnostics := Parse("ordering.nuru", []byte("print(1); var later int = 2;"))
 
 	if len(diagnostics) != 1 || diagnostics[0].Message != "declarations must precede top-level statements" {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
@@ -31,7 +31,7 @@ func TestMisplacedDeclarationProducesDiagnostic(t *testing.T) {
 }
 
 func TestExpressionPrecedenceAndAssociativity(t *testing.T) {
-	program, diagnostics := Parse("precedence.zing", []byte(`print(1 + 2 * 3 == 7 || false && true);`))
+	program, diagnostics := Parse("precedence.nuru", []byte(`print(1 + 2 * 3 == 7 || false && true);`))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -40,7 +40,7 @@ func TestExpressionPrecedenceAndAssociativity(t *testing.T) {
 		t.Fatalf("expression = %s, want %s", got, want)
 	}
 
-	program, diagnostics = Parse("associativity.zing", []byte(`print(10 - 3 - 2);`))
+	program, diagnostics = Parse("associativity.nuru", []byte(`print(10 - 3 - 2);`))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -58,7 +58,7 @@ var counts map[string]int = map[string]int{"one": 1,};
 var empty []int = make([]int, 0);
 print(items[0:1][0].name);
 `
-	program, diagnostics := Parse("postfix.zing", []byte(source))
+	program, diagnostics := Parse("postfix.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -70,7 +70,7 @@ print(items[0:1][0].name);
 
 func TestNodeIDsAreAssignedDeterministically(t *testing.T) {
 	parse := func() *ast.Program {
-		program, diagnostics := Parse("ids.zing", []byte(`var x int = 1; print(x + 2);`))
+		program, diagnostics := Parse("ids.nuru", []byte(`var x int = 1; print(x + 2);`))
 		if len(diagnostics) != 0 {
 			t.Fatalf("unexpected diagnostics: %v", diagnostics)
 		}
@@ -89,12 +89,12 @@ func TestNodeIDsAreAssignedDeterministically(t *testing.T) {
 }
 
 func TestParserRecoversMultipleDiagnostics(t *testing.T) {
-	_, diagnostics := Parse("recovery.zing", []byte("print(,); if true { print(1) } print(,);"))
+	_, diagnostics := Parse("recovery.nuru", []byte("print(,); if true { print(1) } print(,);"))
 	if len(diagnostics) < 2 {
 		t.Fatalf("got %d diagnostics, want at least 2: %v", len(diagnostics), diagnostics)
 	}
 	for _, diagnostic := range diagnostics {
-		if diagnostic.Phase != "parser" || diagnostic.Span.Filename != "recovery.zing" {
+		if diagnostic.Phase != "parser" || diagnostic.Span.Filename != "recovery.nuru" {
 			t.Fatalf("malformed diagnostic: %v", diagnostic)
 		}
 	}
@@ -105,7 +105,7 @@ func TestParseExportAndImport(t *testing.T) {
 export var x int = 10;
 export func add(a int, b int) int { export var res int = a + b; return res; }
 `
-	program, diagnostics := Parse("module.zing", []byte(source))
+	program, diagnostics := Parse("module.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -125,6 +125,6 @@ func FuzzParse(f *testing.F) {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, source string) {
-		Parse("fuzz.zing", []byte(source))
+		Parse("fuzz.nuru", []byte(source))
 	})
 }

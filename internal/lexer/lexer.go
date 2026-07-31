@@ -1,4 +1,4 @@
-// Package lexer converts Zing source bytes into tokens.
+// Package lexer converts Nuru source bytes into tokens.
 package lexer
 
 import (
@@ -10,7 +10,7 @@ import (
 	"github.com/kc-clintone/compilers/internal/token"
 )
 
-// Lexer converts one Zing source file into a token stream.
+// Lexer converts one Nuru source file into a token stream.
 type Lexer struct {
 	filename       string
 	src            []byte

@@ -1,4 +1,4 @@
-// Package ast defines Zing's parser-independent abstract syntax tree.
+// Package ast defines Nuru's parser-independent abstract syntax tree.
 package ast
 
 import (
@@ -96,17 +96,17 @@ func AssignNodeIDs(program *Program) {
 	visit(reflect.ValueOf(program))
 }
 
-// Program is a complete Zing compilation unit.
+// Program is a complete Nuru compilation unit.
 type Program struct {
 	Base
 	Decls []Decl
 	Stmts []Stmt
 }
 
-// TypeKind identifies syntactic and resolved Zing type categories.
+// TypeKind identifies syntactic and resolved Nuru type categories.
 type TypeKind int
 
-// Zing type kinds.
+// Nuru type kinds.
 const (
 	TypeInvalid TypeKind = iota
 	TypeInt
@@ -119,7 +119,7 @@ const (
 	TypeVoid
 )
 
-// TypeRef is a syntactic reference to a Zing type.
+// TypeRef is a syntactic reference to a Nuru type.
 type TypeRef struct {
 	Base
 	Kind      TypeKind

@@ -1,5 +1,5 @@
 // Package cli implements the shared command-line behavior for the separate
-// Zing interpreter and compiler executables.
+// Nuru interpreter and compiler executables.
 package cli
 
 import (
@@ -36,7 +36,7 @@ func (streams Streams) normalized() Streams {
 	return streams
 }
 
-// RunInterpreter executes one zing-interpreter invocation and returns its exit
+// RunInterpreter executes one nuru-interpreter invocation and returns its exit
 // code without terminating the host process.
 func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
@@ -112,7 +112,7 @@ func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	return 0
 }
 
-// RunCompiler executes one zing-compiler invocation and returns its exit code
+// RunCompiler executes one nuru-compiler invocation and returns its exit code
 // without terminating the host process.
 func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
@@ -230,9 +230,9 @@ func outputArgs(args []string, stderr io.Writer) (string, string, bool) {
 }
 
 func interpreterUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: zing-interpreter [--repl [files...]] | zing-interpreter check <file> | zing-interpreter <file> [-- program-args...]")
+	fmt.Fprintln(stderr, "usage: nuru-interpreter [--repl [files...]] | nuru-interpreter check <file> | nuru-interpreter <file> [-- program-args...]")
 }
 
 func compilerUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: zing-compiler check <file> | zing-compiler transpile -o <go-file> <file> | zing-compiler -o <binary> <file>")
+	fmt.Fprintln(stderr, "usage: nuru-compiler check <file> | nuru-compiler transpile -o <go-file> <file> | nuru-compiler -o <binary> <file>")
 }

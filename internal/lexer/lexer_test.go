@@ -23,7 +23,7 @@ true false map make int char string bool name 123 "a\n" '\t'`
 		token.Integer, token.String, token.Char, token.EOF,
 	}
 
-	tokens, diagnostics := Lex("tokens.zing", []byte(source))
+	tokens, diagnostics := Lex("tokens.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -42,7 +42,7 @@ true false map make int char string bool name 123 "a\n" '\t'`
 
 func TestLexCommentsEscapesAndPositions(t *testing.T) {
 	source := "// one\n\tvar name string = \"\\r\\t\\\\\\\"\\'\"; /* two\nlines */\nname"
-	tokens, diagnostics := Lex("positions.zing", []byte(source))
+	tokens, diagnostics := Lex("positions.nuru", []byte(source))
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
@@ -74,7 +74,7 @@ func TestLexDiagnosticsAndRecovery(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			tokens, diagnostics := Lex("bad.zing", []byte(test.source))
+			tokens, diagnostics := Lex("bad.nuru", []byte(test.source))
 			if len(diagnostics) == 0 || diagnostics[0].Message != test.message {
 				t.Fatalf("diagnostics = %v, want %q", diagnostics, test.message)
 			}
@@ -90,7 +90,7 @@ func FuzzLex(f *testing.F) {
 		f.Add(seed)
 	}
 	f.Fuzz(func(t *testing.T, source []byte) {
-		tokens, _ := Lex("fuzz.zing", source)
+		tokens, _ := Lex("fuzz.nuru", source)
 		if len(tokens) == 0 || tokens[len(tokens)-1].Kind != token.EOF {
 			t.Fatal("lexer did not emit EOF")
 		}

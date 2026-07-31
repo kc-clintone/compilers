@@ -1,14 +1,14 @@
-# Zing
+# Nuru
 
-Zing is a small, statically typed teaching language for learning how a compiler
+Nuru is a small, statically typed teaching language for learning how a compiler
 front end, interpreter, and source-to-source compiler fit together. Its
 standard-library-only Go seed implementation uses a handwritten lexer and
 parser, performs a separate semantic check, and then either interprets the
 checked AST or transpiles it to readable Go.
 
 The implementation is bootstrap-ready, not self-hosted. The
-[`source-analyzer.zing`](examples/source-analyzer.zing) example demonstrates
-the data structures and operations needed by a future Zing-written front end.
+[`source-analyzer.nuru`](examples/source-analyzer.nuru) example demonstrates
+the data structures and operations needed by a future Nuru-written front end.
 
 ## Prerequisites
 
@@ -21,28 +21,28 @@ From the repository root:
 
 ```sh
 go test ./...
-go build -o ./zing-interpreter ./cmd/zing-interpreter
-go build -o ./zing-compiler ./cmd/zing-compiler
+go build -o ./nuru-interpreter ./cmd/nuru-interpreter
+go build -o ./nuru-compiler ./cmd/nuru-compiler
 
-./zing-interpreter check examples/04-functions.zing
-./zing-interpreter examples/04-functions.zing
-./zing-compiler check examples/04-functions.zing
-./zing-compiler transpile -o /tmp/functions.go examples/04-functions.zing
-./zing-compiler -o /tmp/functions examples/04-functions.zing
+./nuru-interpreter check examples/04-functions.nuru
+./nuru-interpreter examples/04-functions.nuru
+./nuru-compiler check examples/04-functions.nuru
+./nuru-compiler transpile -o /tmp/functions.go examples/04-functions.nuru
+./nuru-compiler -o /tmp/functions examples/04-functions.nuru
 /tmp/functions
 ```
 
 Interpreter program arguments must follow `--`:
 
 ```sh
-./zing-interpreter examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing
+./nuru-interpreter examples/source-analyzer.nuru -- examples/fixtures/analyzer-input.nuru
 ```
 
 A compiled program receives its arguments normally:
 
 ```sh
-./zing-compiler -o /tmp/source-analyzer examples/source-analyzer.zing
-/tmp/source-analyzer examples/fixtures/analyzer-input.zing
+./nuru-compiler -o /tmp/source-analyzer examples/source-analyzer.nuru
+/tmp/source-analyzer examples/fixtures/analyzer-input.nuru
 ```
 
 Both tools return 0 for success, 1 for source/runtime/build failures, and 2 for
@@ -58,7 +58,7 @@ source -> lexer -> parser/AST -> static checker -> interpreter
 
 The matching stages live under `internal/`. The checker produces immutable
 node-ID-keyed type, symbol, struct, and built-in resolutions consumed by both
-back ends. `mini.g4` remains a readable parser-generator reference; production
+back ends. `nuru.g4` remains a readable parser-generator reference; production
 builds use the handwritten lexer and a pure **Recursive Descent** parser for expressions to maximize readability for learners.
 
 
@@ -68,7 +68,7 @@ differential tests for successful and failing programs.
 
 ## Teaching and learning material
 
-- [Zing v1 language reference](docs/language.md)
+- [Nuru v1 language reference](docs/language.md)
 - [Language evolution roadmap](docs/ROADMAP.md)
 - [Guided teaching walkthrough](docs/teaching-guide.md)
 - [Latest verification record](docs/verification.md)
@@ -81,4 +81,4 @@ The repository is intentionally complete so it can be read stage by stage.
 When using it as an exercise, an instructor or self-directed learner can stop
 after lexing and parsing, omit static checking, or compare a smaller
 implementation against this reference. Rewriting the seed implementation in
-Zing remains a later milestone.
+Nuru remains a later milestone.

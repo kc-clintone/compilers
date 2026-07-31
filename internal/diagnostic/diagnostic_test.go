@@ -10,25 +10,25 @@ import (
 func TestDiagnosticError(t *testing.T) {
 	diagnostic := Diagnostic{
 		Span: source.Span{
-			Filename: "example.zing",
+			Filename: "example.nuru",
 			Start:    source.Position{Offset: 12, Line: 3, Column: 5},
 			End:      source.Position{Offset: 15, Line: 3, Column: 8},
 		},
 		Phase:   "checker",
 		Message: "unknown variable value",
 	}
-	if got, want := diagnostic.Error(), "example.zing:3:5: checker: unknown variable value"; got != want {
+	if got, want := diagnostic.Error(), "example.nuru:3:5: checker: unknown variable value"; got != want {
 		t.Fatalf("Error() = %q, want %q", got, want)
 	}
 }
 
 func TestSortOrdersByFilenameAndOffsetStably(t *testing.T) {
 	diagnostics := []Diagnostic{
-		makeDiagnostic("b.zing", 2, "b-two"),
-		makeDiagnostic("a.zing", 8, "a-eight"),
-		makeDiagnostic("a.zing", 3, "a-three-first"),
-		makeDiagnostic("b.zing", 1, "b-one"),
-		makeDiagnostic("a.zing", 3, "a-three-second"),
+		makeDiagnostic("b.nuru", 2, "b-two"),
+		makeDiagnostic("a.nuru", 8, "a-eight"),
+		makeDiagnostic("a.nuru", 3, "a-three-first"),
+		makeDiagnostic("b.nuru", 1, "b-one"),
+		makeDiagnostic("a.nuru", 3, "a-three-second"),
 	}
 	Sort(diagnostics)
 

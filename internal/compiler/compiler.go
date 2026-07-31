@@ -1,4 +1,4 @@
-// Package compiler translates checked Zing programs to readable Go.
+// Package compiler translates checked Nuru programs to readable Go.
 package compiler
 
 import (
@@ -25,7 +25,7 @@ type generator struct {
 	helpers map[string]bool
 }
 
-// Generate translates a checked Zing program into formatted Go source.
+// Generate translates a checked Nuru program into formatted Go source.
 func Generate(p *ast.Program, info *checker.Info) ([]byte, error) {
 	g := &generator{info: info, imports: map[string]bool{}, helpers: map[string]bool{}}
 
@@ -74,7 +74,7 @@ func Generate(p *ast.Program, info *checker.Info) ([]byte, error) {
 // Build compiles generated Go source to output using an isolated temporary
 // source directory and the caller's configured Go build cache.
 func Build(ctx context.Context, src []byte, output string) error {
-	dir, err := os.MkdirTemp("", "zing-build-*")
+	dir, err := os.MkdirTemp("", "nuru-build-*")
 	if err != nil {
 		return err
 	}
@@ -160,10 +160,10 @@ func (g *generator) stmt(s ast.Stmt) {
 			switch g.info.TypeOf(index.Object).Kind {
 			case ast.TypeSlice:
 				g.helpers["setSlice"] = true
-				g.line("zingSetSlice(" + g.expr(index.Object) + ", " + g.expr(index.Index) + ", " + g.expr(x.Value) + ", " + location(index) + ")")
+				g.line("nuruSetSlice(" + g.expr(index.Object) + ", " + g.expr(index.Index) + ", " + g.expr(x.Value) + ", " + location(index) + ")")
 			case ast.TypeMap:
 				g.helpers["setMap"] = true
-				g.line("zingSetMap(" + g.expr(index.Object) + ", " + g.expr(index.Index) + ", " + g.expr(x.Value) + ", " + location(index) + ")")
+				g.line("nuruSetMap(" + g.expr(index.Object) + ", " + g.expr(index.Index) + ", " + g.expr(x.Value) + ", " + location(index) + ")")
 			default:
 				g.line(g.expr(x.Target) + " = " + g.expr(x.Value))
 			}
@@ -326,9 +326,9 @@ func (g *generator) expr(e ast.Expr) string {
 		return "(" + x.Op + g.expr(x.Right) + ")"
 	case *ast.BinaryExpr:
 		if x.Op == "/" || x.Op == "%" {
-			helper := "zingDiv"
+			helper := "nuruDiv"
 			if x.Op == "%" {
-				helper = "zingMod"
+				helper = "nuruMod"
 			}
 			g.helpers["division"] = true
 			return helper + "(" + g.expr(x.Left) + ", " + g.expr(x.Right) + ", " + location(x) + ")"
@@ -340,10 +340,10 @@ func (g *generator) expr(e ast.Expr) string {
 		switch g.info.TypeOf(x.Object).Kind {
 		case ast.TypeSlice:
 			g.helpers["indexSlice"] = true
-			return "zingIndexSlice(" + g.expr(x.Object) + ", " + g.expr(x.Index) + ", " + location(x) + ")"
+			return "nuruIndexSlice(" + g.expr(x.Object) + ", " + g.expr(x.Index) + ", " + location(x) + ")"
 		case ast.TypeString:
 			g.helpers["indexString"] = true
-			return "zingIndexString(" + g.expr(x.Object) + ", " + g.expr(x.Index) + ", " + location(x) + ")"
+			return "nuruIndexString(" + g.expr(x.Object) + ", " + g.expr(x.Index) + ", " + location(x) + ")"
 		default:
 			return g.expr(x.Object) + "[" + g.expr(x.Index) + "]"
 		}
@@ -367,17 +367,17 @@ func (g *generator) expr(e ast.Expr) string {
 		}
 		if g.info.TypeOf(x.Object).Kind == ast.TypeString {
 			g.helpers["sliceString"] = true
-			return "zingSliceString(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
+			return "nuruSliceString(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
 		}
 		g.helpers["sliceSlice"] = true
-		return "zingSliceSlice(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
+		return "nuruSliceSlice(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
 	case *ast.MakeExpr:
 		if x.Type.Kind == ast.TypeSlice {
 			if x.Size == nil {
 				return "make(" + g.typ(x.Type) + ", 0)"
 			}
 			g.helpers["makeSlice"] = true
-			return "zingMakeSlice[" + g.typ(x.Type.Elem) + "](" + g.expr(x.Size) + ", " + location(x) + ")"
+			return "nuruMakeSlice[" + g.typ(x.Type.Elem) + "](" + g.expr(x.Size) + ", " + location(x) + ")"
 		}
 		return "make(" + g.typ(x.Type) + ")"
 	case *ast.CompositeExpr:
@@ -419,28 +419,28 @@ func (g *generator) call(x *ast.CallExpr) string {
 	switch builtin {
 	case checker.BuiltinPrint:
 		g.helpers["print"] = true
-		return "zingPrint(" + args + ")"
+		return "nuruPrint(" + args + ")"
 	case checker.BuiltinArgs:
 		g.imports["os"] = true
 		return "os.Args[1:]"
 	case checker.BuiltinReadFile:
 		g.helpers["read"] = true
-		return "zingReadFile(" + location(x) + ", " + args + ")"
+		return "nuruReadFile(" + location(x) + ", " + args + ")"
 	case checker.BuiltinWriteFile:
 		g.helpers["write"] = true
-		return "zingWriteFile(" + location(x) + ", " + args + ")"
+		return "nuruWriteFile(" + location(x) + ", " + args + ")"
 	case checker.BuiltinFail:
 		g.helpers["fail"] = true
-		return "zingFail(" + location(x) + ", " + args + ")"
+		return "nuruFail(" + location(x) + ", " + args + ")"
 	case checker.BuiltinLen, checker.BuiltinAppend:
 		return x.Callee + "(" + args + ")"
 	case checker.BuiltinChar:
 		g.helpers["char"] = true
-		return "zingChar(" + args + ", " + location(x) + ")"
+		return "nuruChar(" + args + ", " + location(x) + ")"
 	case checker.BuiltinInt:
 		if len(x.Args) == 1 && g.info.TypeOf(x.Args[0]).Kind == ast.TypeString {
 			g.helpers["atoi"] = true
-			return "zingAtoi(" + args + ", " + location(x) + ")"
+			return "nuruAtoi(" + args + ", " + location(x) + ")"
 		}
 
 		return "int(" + args + ")"
@@ -491,7 +491,7 @@ func (g *generator) emitHelpers() {
 		g.imports["fmt"] = true
 		g.imports["os"] = true
 		g.line("")
-		g.line("func zingFail(location, message string) {")
+		g.line("func nuruFail(location, message string) {")
 		g.indent++
 		g.line("fmt.Fprintln(os.Stderr, location+\": runtime: \"+message)")
 		g.line("os.Exit(1)")
@@ -501,10 +501,10 @@ func (g *generator) emitHelpers() {
 
 	if g.helpers["read"] {
 		g.line("")
-		g.line("func zingReadFile(location, path string) string {")
+		g.line("func nuruReadFile(location, path string) string {")
 		g.indent++
 		g.line("data, err := os.ReadFile(path)")
-		g.line("if err != nil { zingFail(location, err.Error()) }")
+		g.line("if err != nil { nuruFail(location, err.Error()) }")
 		g.line("return string(data)")
 		g.indent--
 		g.line("}")
@@ -512,9 +512,9 @@ func (g *generator) emitHelpers() {
 
 	if g.helpers["write"] {
 		g.line("")
-		g.line("func zingWriteFile(location, path, contents string) {")
+		g.line("func nuruWriteFile(location, path, contents string) {")
 		g.indent++
-		g.line("if err := os.WriteFile(path, []byte(contents), 0644); err != nil { zingFail(location, err.Error()) }")
+		g.line("if err := os.WriteFile(path, []byte(contents), 0644); err != nil { nuruFail(location, err.Error()) }")
 		g.indent--
 		g.line("}")
 	}
@@ -522,10 +522,10 @@ func (g *generator) emitHelpers() {
 	if g.helpers["atoi"] {
 		g.imports["strconv"] = true
 		g.line("")
-		g.line("func zingAtoi(value, location string) int {")
+		g.line("func nuruAtoi(value, location string) int {")
 		g.indent++
 		g.line("n, err := strconv.Atoi(value)")
-		g.line("if err != nil { zingFail(location, \"invalid integer conversion\") }")
+		g.line("if err != nil { nuruFail(location, \"invalid integer conversion\") }")
 		g.line("return n")
 		g.indent--
 		g.line("}")
@@ -533,9 +533,9 @@ func (g *generator) emitHelpers() {
 
 	if g.helpers["char"] {
 		g.line("")
-		g.line("func zingChar(value int, location string) byte {")
+		g.line("func nuruChar(value int, location string) byte {")
 		g.indent++
-		g.line("if value < 0 || value > 255 { zingFail(location, \"invalid character conversion\") }")
+		g.line("if value < 0 || value > 255 { nuruFail(location, \"invalid character conversion\") }")
 		g.line("return byte(value)")
 		g.indent--
 		g.line("}")
@@ -543,37 +543,37 @@ func (g *generator) emitHelpers() {
 
 	if g.helpers["division"] {
 		g.line("")
-		g.line("func zingDiv(left, right int, location string) int { if right == 0 { zingFail(location, \"division by zero\") }; return left / right }")
-		g.line("func zingMod(left, right int, location string) int { if right == 0 { zingFail(location, \"division by zero\") }; return left % right }")
+		g.line("func nuruDiv(left, right int, location string) int { if right == 0 { nuruFail(location, \"division by zero\") }; return left / right }")
+		g.line("func nuruMod(left, right int, location string) int { if right == 0 { nuruFail(location, \"division by zero\") }; return left % right }")
 	}
 
 	if g.helpers["indexSlice"] {
 		g.line("")
-		g.line("func zingIndexSlice[T any](value []T, index int, location string) T { if index < 0 || index >= len(value) { zingFail(location, \"index out of bounds\") }; return value[index] }")
+		g.line("func nuruIndexSlice[T any](value []T, index int, location string) T { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; return value[index] }")
 	}
 	if g.helpers["indexString"] {
 		g.line("")
-		g.line("func zingIndexString(value string, index int, location string) byte { if index < 0 || index >= len(value) { zingFail(location, \"index out of bounds\") }; return value[index] }")
+		g.line("func nuruIndexString(value string, index int, location string) byte { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; return value[index] }")
 	}
 	if g.helpers["sliceSlice"] {
 		g.line("")
-		g.line("func zingSliceSlice[T any](value []T, low, high int, location string) []T { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { zingFail(location, \"slice bounds out of range\") }; return value[low:high] }")
+		g.line("func nuruSliceSlice[T any](value []T, low, high int, location string) []T { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { nuruFail(location, \"slice bounds out of range\") }; return value[low:high] }")
 	}
 	if g.helpers["sliceString"] {
 		g.line("")
-		g.line("func zingSliceString(value string, low, high int, location string) string { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { zingFail(location, \"slice bounds out of range\") }; return value[low:high] }")
+		g.line("func nuruSliceString(value string, low, high int, location string) string { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { nuruFail(location, \"slice bounds out of range\") }; return value[low:high] }")
 	}
 	if g.helpers["setSlice"] {
 		g.line("")
-		g.line("func zingSetSlice[T any](value []T, index int, item T, location string) { if index < 0 || index >= len(value) { zingFail(location, \"index out of bounds\") }; value[index] = item }")
+		g.line("func nuruSetSlice[T any](value []T, index int, item T, location string) { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; value[index] = item }")
 	}
 	if g.helpers["setMap"] {
 		g.line("")
-		g.line("func zingSetMap[K comparable, V any](value map[K]V, key K, item V, location string) { if value == nil { zingFail(location, \"assignment to uninitialized map\") }; value[key] = item }")
+		g.line("func nuruSetMap[K comparable, V any](value map[K]V, key K, item V, location string) { if value == nil { nuruFail(location, \"assignment to uninitialized map\") }; value[key] = item }")
 	}
 	if g.helpers["makeSlice"] {
 		g.line("")
-		g.line("func zingMakeSlice[T any](length int, location string) []T { if length < 0 { zingFail(location, \"negative slice size\") }; return make([]T, length) }")
+		g.line("func nuruMakeSlice[T any](length int, location string) []T { if length < 0 { nuruFail(location, \"negative slice size\") }; return make([]T, length) }")
 	}
 
 	if g.helpers["print"] {
@@ -582,14 +582,14 @@ func (g *generator) emitHelpers() {
 		g.imports["strconv"] = true
 		g.imports["strings"] = true
 		g.line("")
-		g.line("func zingPrint(values ...any) {")
+		g.line("func nuruPrint(values ...any) {")
 		g.indent++
 		g.line("parts := make([]string, len(values))")
-		g.line("for i, value := range values { parts[i] = zingDisplay(reflect.ValueOf(value)) }")
+		g.line("for i, value := range values { parts[i] = nuruDisplay(reflect.ValueOf(value)) }")
 		g.line("fmt.Println(strings.Join(parts, \" \"))")
 		g.indent--
 		g.line("}")
-		g.line("func zingDisplay(value reflect.Value) string {")
+		g.line("func nuruDisplay(value reflect.Value) string {")
 		g.indent++
 		g.line("if !value.IsValid() { return \"<void>\" }")
 		g.line("if value.Kind() == reflect.Pointer { if value.IsNil() { return \"<nil>\" }; return strings.TrimPrefix(value.Elem().Type().Name(), \"z_\") }")
@@ -598,7 +598,7 @@ func (g *generator) emitHelpers() {
 		g.line("case reflect.Uint8: return string([]byte{byte(value.Uint())})")
 		g.line("case reflect.String: return value.String()")
 		g.line("case reflect.Bool: return strconv.FormatBool(value.Bool())")
-		g.line("case reflect.Slice: parts := make([]string, value.Len()); for i := range parts { parts[i] = zingDisplay(value.Index(i)) }; return \"[\"+strings.Join(parts, \" \")+\"]\"")
+		g.line("case reflect.Slice: parts := make([]string, value.Len()); for i := range parts { parts[i] = nuruDisplay(value.Index(i)) }; return \"[\"+strings.Join(parts, \" \")+\"]\"")
 		g.line("case reflect.Map: return fmt.Sprintf(\"map[%d entries]\", value.Len())")
 		g.line("}")
 		g.line("return \"<invalid>\"")

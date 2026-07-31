@@ -11,10 +11,10 @@ From a clean checkout, run:
 
 ```sh
 go test ./...
-go build -o /tmp/zing-interpreter ./cmd/zing-interpreter
-go build -o /tmp/zing-compiler ./cmd/zing-compiler
-/tmp/zing-interpreter check examples/source-analyzer.zing
-/tmp/zing-interpreter examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing > /tmp/analyzer-interpreted.stdout
+go build -o /tmp/nuru-interpreter ./cmd/nuru-interpreter
+go build -o /tmp/nuru-compiler ./cmd/nuru-compiler
+/tmp/nuru-interpreter check examples/source-analyzer.nuru
+/tmp/nuru-interpreter examples/source-analyzer.nuru -- examples/fixtures/analyzer-input.nuru > /tmp/analyzer-interpreted.stdout
 cmp /tmp/analyzer-interpreted.stdout examples/expected/source-analyzer.stdout
 ```
 
@@ -29,14 +29,14 @@ expected results without running the Go toolchain.
    inspect `internal/lexer`, `internal/parser`, `internal/ast`, and
    `internal/checker`.
    The handwritten implementation exposes the mechanics clearly, while
-   `mini.g4` shows how the same syntax can be described for a parser generator.
+   `nuru.g4` shows how the same syntax can be described for a parser generator.
 2. **Interpret a program.** Run the source analyzer command above. Trace its
    byte-oriented lexing, token structs, slice append, struct mutation, and map
    counting.
 3. **Inspect generated Go.** Run:
 
    ```sh
-   /tmp/zing-compiler transpile -o /tmp/source-analyzer.go examples/source-analyzer.zing
+   /tmp/nuru-compiler transpile -o /tmp/source-analyzer.go examples/source-analyzer.nuru
    sed -n '1,120p' /tmp/source-analyzer.go
    ```
 
@@ -45,8 +45,8 @@ expected results without running the Go toolchain.
 4. **Build and compare both back ends.** Run:
 
    ```sh
-   /tmp/zing-compiler -o /tmp/source-analyzer examples/source-analyzer.zing
-   /tmp/source-analyzer examples/fixtures/analyzer-input.zing > /tmp/analyzer-compiled.stdout
+   /tmp/nuru-compiler -o /tmp/source-analyzer examples/source-analyzer.nuru
+   /tmp/source-analyzer examples/fixtures/analyzer-input.nuru > /tmp/analyzer-compiled.stdout
    cmp /tmp/analyzer-interpreted.stdout /tmp/analyzer-compiled.stdout
    ```
 
@@ -55,14 +55,14 @@ expected results without running the Go toolchain.
 5. **Explore a static diagnostic.** Create a temporary erroneous program:
 
    ```sh
-   sed 's/return n \* factorial(n - 1);/return "not an int";/' examples/04-functions.zing > /tmp/type-error.zing
-   /tmp/zing-compiler check /tmp/type-error.zing
+   sed 's/return n \* factorial(n - 1);/return "not an int";/' examples/04-functions.nuru > /tmp/type-error.nuru
+   /tmp/nuru-compiler check /tmp/type-error.nuru
    ```
 
-   The compiler reports a Zing checker diagnostic and exits with status 1
+   The compiler reports a Nuru checker diagnostic and exits with status 1
    before generating Go. Use the location and phase label to trace the error
    from syntax into semantic checking.
-6. **Discuss bootstrap readiness.** Go remains the seed implementation. Zing
+6. **Discuss bootstrap readiness.** Go remains the seed implementation. Nuru
    can express compiler-shaped work, but self-hosting would require replacing
    and differentially verifying each seed stage.
 

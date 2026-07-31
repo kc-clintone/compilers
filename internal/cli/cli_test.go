@@ -26,7 +26,7 @@ func TestInterpreterCommandsAndExitCodes(t *testing.T) {
 		{"default repl", nil, "1 + 2;\nexit\n", 0, "3\n", ""},
 		{"--repl mode", []string{"--repl", valid}, "exit\n", 0, "", ""},
 		{"source error", []string{"check", invalid}, "", 1, "", "checker:"},
-		{"arguments need separator", []string{valid, "hello"}, "", 2, "", "usage: zing-interpreter"},
+		{"arguments need separator", []string{valid, "hello"}, "", 2, "", "usage: nuru-interpreter"},
 	}
 
 	for _, test := range tests {
@@ -74,8 +74,8 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 		text string
 	}{
 		{"source error", []string{"check", invalid}, 1, "checker:"},
-		{"usage", []string{"transpile", valid}, 2, "usage: zing-compiler"},
-		{"invalid flags", []string{"-x", valid}, 2, "usage: zing-compiler"},
+		{"usage", []string{"transpile", valid}, 2, "usage: nuru-compiler"},
+		{"invalid flags", []string{"-x", valid}, 2, "usage: nuru-compiler"},
 		{"same path", []string{"transpile", "-o", valid, valid}, 2, "output path must differ"},
 	}
 	for _, test := range tests {
@@ -102,7 +102,7 @@ func TestModuleWarning(t *testing.T) {
 
 func writeSource(t *testing.T, source string) string {
 	t.Helper()
-	filename := filepath.Join(t.TempDir(), "program.zing")
+	filename := filepath.Join(t.TempDir(), "program.nuru")
 	if err := os.WriteFile(filename, []byte(source), 0o600); err != nil {
 		t.Fatal(err)
 	}
