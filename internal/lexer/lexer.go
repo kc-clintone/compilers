@@ -15,7 +15,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/lexer
-  - Inspect:    ./zing tokens examples/01-tokens.zing
+  - Inspect:    ./zing-interpreter tokens examples/01-tokens.zing
   - Skip stage: ./savepoint.sh 1
   - Reset stage: ./savepoint.sh 0
 ===============================================================================

@@ -1,5 +1,6 @@
 # Binaries
-/zing
+/zing-interpreter
+/zing-compiler
 *.exe
 *.exe~
 *.dll

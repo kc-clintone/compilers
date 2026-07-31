@@ -19,7 +19,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/interpreter
-  - Run code:   ./zing run examples/03-interpreter.zing
+  - Run code:   ./zing-interpreter examples/03-interpreter.zing
   - Skip stage: ./savepoint.sh 3
   - Reset stage: ./savepoint.sh 2
 ===============================================================================

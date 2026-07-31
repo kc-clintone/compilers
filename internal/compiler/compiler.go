@@ -16,7 +16,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/compiler
-  - Compile:    ./zing compile examples/04-compiled.zing
+  - Compile:    ./zing-compiler examples/04-compiled.zing
   - Skip stage: ./savepoint.sh 4
   - Reset stage: ./savepoint.sh 3
 ===============================================================================
