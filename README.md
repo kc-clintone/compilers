@@ -1,124 +1,163 @@
-# Compilers Workshop Scaffold: Building Zing
+# Compilers Workshop Scaffold: Building Nuru
 
-Welcome to the **Building a Compiler in Go** workshop!
+Welcome to the **Building a Compiler and Interpreter in Go** workshop. You will
+complete four short **QUESTS** that add identifiers, variables, branches, and
+functions to Nuru, a small dynamically typed teaching language.
 
-In this workshop, you will learn compiler and interpreter engineering by embarking on a step-by-step **QUEST** to implement **Branches (`if`/`else`)**, **Variables**, and **Functions** in the Zing programming language.
-
----
-
-## 1. Project & Pipeline Overview
-
-Zing is a dynamically typed programming language designed for learning compiler architecture. The pipeline follows 4 stages:
+## Pipeline
 
 ```text
-Source Code (.zing)
-       │
-       ▼
-┌──────────────┐
-│    Lexer     │  Tokenizes raw source text into a stream of Tokens
-└──────┬───────┘
-       │
-       ▼
-┌──────────────┐
-│    Parser    │  Parses Tokens into an Abstract Syntax Tree (AST) using Recursive Descent
-└──────┬───────┘
-       │
-       ├──────────────────────────┐
-       ▼                          ▼
-┌──────────────┐          ┌──────────────┐
-│ Interpreter  │          │   Compiler   │
-│  (Evaluator) │          │ (Transpiler) │  Transpiles AST directly into clean Go code
-└──────────────┘          └──────────────┘
+Nuru source (.nuru) -> lexer -> recursive-descent parser / AST
+                                      |-> tree-walking interpreter
+                                      `-> Go source transpiler -> go build
 ```
 
----
+The transpiler emits ordinary Go source. This workshop does not introduce a
+bytecode format, virtual machine, assembly backend, or closures.
 
-## 2. CLI Tools: `zing-interpreter` and `zing-compiler`
+## Before the first QUEST
 
-The repository provides two separate CLI entry points:
+- Install Go 1.22 or newer.
+- Be comfortable reading Go that uses structs, pointers, slices, maps,
+  interfaces, and multiple packages.
+- Bring a terminal, an editor, curiosity, and a sense of adventure.
 
-### 1. `zing-interpreter` (Direct Evaluator & REPL)
-- **Default Execution:** Interprets a Zing source file directly.
-  ```bash
-  ./zing-interpreter examples/03-interpreter.zing
-  ```
-- **Interactive REPL:** Opens REPL when run with no arguments.
-  ```bash
-  ./zing-interpreter
-  ```
-- **Inspect Tokens:** `./zing-interpreter tokens examples/01-tokens.zing`
-- **Inspect AST:** `./zing-interpreter ast examples/02-ast.zing`
+Every file needed for the workshop is already provided. Start from `main` or a
+branch based on it; do not create additional files or directories. A larger,
+statically typed, bootstrap-ready Nuru reference implementation is available
+on the `lugha` branch for study after the workshop.
 
-### 2. `zing-compiler` (Native Go Transpiler & Builder)
-- **Default Execution:** Transpiles a Zing program and builds a native executable.
-  ```bash
-  ./zing-compiler examples/04-compiled.zing -o ./04-compiled
-  ./04-compiled
-  ```
-- **Inspect Tokens:** `./zing-compiler tokens examples/01-tokens.zing`
-- **Inspect AST:** `./zing-compiler ast examples/02-ast.zing`
-- **Transpile Go Source:** `./zing-compiler transpile examples/04-compiled.zing`
+## Build and use the tools
 
-*Note: Any unrecognized options or arguments passed to either CLI will trigger a warning on `os.Stderr` and be ignored.*
+Build both command-line programs from the repository root:
 
----
-
-## 3. The QUEST & TASK Adventure Architecture
-
-Each stage of the workshop is structured as a **QUEST**.
-
-### QUEST Banners
-Every file that requires modification contains a **QUEST Banner** at the top summarizing the stage goals, tasks involved, and relevant CLI commands.
-
-### TASK Markers & Symbol Discovery
-Instead of scattered comments, task markers (`TASK [LEX-01]`, `TASK [PARSE-01]`, `TASK [EVAL-01]`, `TASK [GEN-01]`) are placed *only* at the exact location where code must be written. Required structs, constants, or token kinds are mentioned in the task description so you can search for symbol definitions in the codebase.
-
-Search for tasks using `grep`:
-```bash
-# Search for Stage 1 (Lexer) tasks
-grep -rn "TASK \[LEX-" .
-
-# Search for Stage 2 (Parser) tasks
-grep -rn "TASK \[PARSE-" .
-
-# Search for Stage 3 (Interpreter) tasks
-grep -rn "TASK \[EVAL-" .
-
-# Search for Stage 4 (Compiler) tasks
-grep -rn "TASK \[GEN-" .
+```console
+$ go build -o ./nuru-interpreter ./cmd/nuru-interpreter
+$ go build -o ./nuru-compiler ./cmd/nuru-compiler
 ```
 
-### Solution HINTs
-At the bottom of every task file, you will find a `QUEST HINTS & SOLUTIONS` section with drop-in code snippets for each task (e.g. `HINT [LEX-01-HINT]`).
+A successful build is silent. Inspect the supported commands with `--help`:
 
----
+```console
+$ ./nuru-interpreter --help
+Nuru Interpreter (Workshop Edition)
 
-## 4. Resetting or Skipping Quests (`savepoint.sh`)
-
-If you get stuck or want to reset/skip a stage, use `./savepoint.sh`:
-
-```bash
-# Reset to initial scaffold (Stage 0)
-./savepoint.sh 0
-
-# Jump to Lexer checkpoint (Stage 1 solved)
-./savepoint.sh 1
-
-# Jump to Parser checkpoint (Stage 2 solved)
-./savepoint.sh 2
-
-# Jump to Interpreter checkpoint (Stage 3 solved)
-./savepoint.sh 3
-
-# Jump to complete solution (Stage 4 solved)
-./savepoint.sh 4
+Usage:
+  nuru-interpreter <file.nuru>         Run file using interpreter (default)
+  nuru-interpreter tokens <file.nuru>  Inspect Lexer token stream
+  nuru-interpreter ast <file.nuru>     Inspect Parser AST tree
+  nuru-interpreter repl                Start interactive REPL
+  nuru-interpreter -h, --help          Show help message
 ```
 
----
+Running `./nuru-interpreter` without arguments also opens the REPL. The
+compiler can inspect the same front-end stages, print Go, or build a binary:
 
-## 5. Running Unit Tests
+```console
+$ ./nuru-compiler --help
+Nuru Compiler (Workshop Edition)
 
-```bash
-# Run all tests across the repository
-go test ./...
+Usage:
+  nuru-compiler [-o binary] <file.nuru>   Compile Nuru program to native executable (default)
+  nuru-compiler tokens <file.nuru>         Inspect Lexer token stream
+  nuru-compiler ast <file.nuru>            Inspect Parser AST tree
+  nuru-compiler transpile [-o out.go] <f> Transpile Nuru program to Go source
+  nuru-compiler -h, --help                 Show help message
 ```
+
+Each QUEST introduces the feature needed by its matching example. The guide
+shows when to run these commands:
+
+```console
+$ ./nuru-interpreter tokens examples/01-tokens.nuru
+$ ./nuru-interpreter ast examples/02-ast.nuru
+$ ./nuru-interpreter examples/03-interpreter.nuru
+Factorial of 5: 120
+
+$ ./nuru-compiler -o ./04-compiled examples/04-compiled.nuru
+Transpiled Go code written to /tmp/nuru-build-.../main.go
+Compiled binary output written to ./04-compiled
+$ ./04-compiled
+Fibonacci of 10: 55
+```
+
+## How the workshop works
+
+Use this README or
+[`compilers-and-interpreters-in-go.html`](compilers-and-interpreters-in-go.html)
+as your guide, then repeat this loop for every stage:
+
+1. Find the next QUEST banner in stage order.
+2. Read the complete QUEST instructions at the top of its file.
+3. Search for each TASK by its unique identifier, such as `LEX-01`.
+4. Complete and test only those TASK locations.
+5. Optionally delete the completed `TASK [...]` marker so future searches show
+   the remaining work.
+6. Return to the guide, verify the checkpoint output, and begin the next QUEST.
+
+Locate all QUEST banners with:
+
+```console
+$ grep -rn "QUEST STAGE" internal
+internal/interpreter/interpreter.go:3:QUEST STAGE 3: THE LIVING ENGINE (Interpreter)
+internal/compiler/compiler.go:3:QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler)
+internal/lexer/lexer.go:3:QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer)
+internal/parser/parser.go:3:QUEST STAGE 2: THE STRUCTURAL WEAVER (Parser)
+internal/token/token.go:3:QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)
+```
+
+Then search only for the current QUEST's identifiers. For example:
+
+```console
+$ grep -rn "TASK \[LEX-" internal
+internal/lexer/lexer.go:10:  - TASK [LEX-01]: Implement character classification helpers:
+internal/lexer/lexer.go:13:  - TASK [LEX-02]: Implement keyword lookup in identifier() for reserved words
+internal/lexer/lexer.go:204:    // TASK [LEX-02]: Implement keyword matching for reserved words ...
+internal/lexer/lexer.go:245:// TASK [LEX-01]: Implement character classification helpers:
+internal/token/token.go:9:  - TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds ...
+internal/token/token.go:67:    // TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds ...
+internal/token/token.go:99:// TASK [LEX-03]: Add "var": Var and "func": Func to the Keywords map ...
+```
+
+The HTML guide labels every snippet with its path and starter-checkpoint line
+number. Earlier stages modify different files, so the labelled location remains
+stable when you reach its QUEST. Search by TASK identifier if local edits have
+shifted a line.
+
+The four 15-minute stages are recorded as annotated Git tags:
+
+1. **Stage 1 — Lexer (`1-lexer`):** identifiers and the `var`/`func` keyword vocabulary.
+2. **Stage 2 — Parser (`2-parser`):** branches, variables, identifiers, declarations, and calls.
+3. **Stage 3 — Interpreter (`3-interpreter`):** environments, branches, function calls, and returns.
+4. **Stage 4 — Transpiler (`4-compiler`):** direct Go generation for the same features.
+
+## Reset or skip a QUEST
+
+```console
+$ ./savepoint.sh 0  # starter scaffold
+$ ./savepoint.sh 1  # lexer complete
+$ ./savepoint.sh 2  # parser complete
+$ ./savepoint.sh 3  # interpreter complete
+$ ./savepoint.sh 4  # transpiler complete
+```
+
+Each command reports the selected tag and confirms restoration. For example:
+
+```text
+Resetting repository to checkpoint tag: 2-parser...
+Successfully restored repository checkpoint 2-parser!
+```
+
+`savepoint.sh` runs `git reset --hard` and `git clean -fd`. It intentionally
+discards tracked and untracked workshop progress. Commit work you want to keep
+before using it.
+
+## Verify your checkpoint
+
+```console
+$ go test ./...
+```
+
+Successful packages finish with `ok`; packages without tests report
+`[no test files]`. Return to the guide after the test run and continue with the
+next QUEST.

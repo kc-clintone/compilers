@@ -19,7 +19,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/interpreter
-  - Run code:   ./zing-interpreter examples/03-interpreter.zing
+  - Run code:   ./nuru-interpreter examples/03-interpreter.nuru
   - Skip stage: ./savepoint.sh 3
   - Reset stage: ./savepoint.sh 2
 ===============================================================================
@@ -71,10 +71,9 @@ func (e *Environment) Define(name string, val any) {
 	e.values[name] = val
 }
 
-// UserFunction stores a function declaration and its lexical closure environment.
+// UserFunction stores a top-level function declaration.
 type UserFunction struct {
-	Decl    *ast.FuncDecl
-	Closure *Environment
+	Decl *ast.FuncDecl
 }
 
 // Control flow signals
@@ -82,7 +81,7 @@ type ReturnVal struct{ Value any }
 type BreakVal struct{}
 type ContinueVal struct{}
 
-// Interpreter evaluates Zing AST nodes.
+// Interpreter evaluates Nuru AST nodes.
 type Interpreter struct {
 	env   *Environment
 	funcs map[string]*UserFunction
@@ -126,7 +125,7 @@ func (in *Interpreter) evalDecl(decl ast.Decl) {
 }
 
 // TASK [EVAL-03]: Implement evalFuncDecl() to register user functions in in.funcs[d.Name].
-// Uses UserFunction{Decl: d, Closure: env}.
+// Uses UserFunction{Decl: d}.
 // See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
 	in.error(d.GetSpan(), "function declarations are not evaluated in Stage 0/1/2")
@@ -434,7 +433,7 @@ HINT [EVAL-02-HINT]:
 HINT [EVAL-03-HINT]:
   Implement evalFuncDecl, evalCallExpr, and evalReturnStmt:
     func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
-        in.funcs[d.Name] = &UserFunction{Decl: d, Closure: env}
+        in.funcs[d.Name] = &UserFunction{Decl: d}
     }
 
     func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
@@ -457,7 +456,7 @@ HINT [EVAL-03-HINT]:
             return nil
         }
 
-        callEnv := NewEnvironment(fn.Closure)
+        callEnv := NewEnvironment(in.env)
         for i, argExpr := range e.Args {
             argVal := in.evalExpr(argExpr, env)
             callEnv.Define(fn.Decl.Params[i], argVal)

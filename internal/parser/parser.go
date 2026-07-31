@@ -21,7 +21,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/parser
-  - Inspect:    ./zing-interpreter ast examples/02-ast.zing
+  - Inspect:    ./nuru-interpreter ast examples/02-ast.nuru
   - Skip stage: ./savepoint.sh 2
   - Reset stage: ./savepoint.sh 1
 ===============================================================================

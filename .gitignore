@@ -1,6 +1,6 @@
 # Binaries
-/zing-interpreter
-/zing-compiler
+/nuru-interpreter
+/nuru-compiler
 *.exe
 *.exe~
 *.dll

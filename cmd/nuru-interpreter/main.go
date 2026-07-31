@@ -14,14 +14,14 @@ import (
 )
 
 func printHelp() {
-	fmt.Println("Zing Interpreter (Workshop Edition)")
+	fmt.Println("Nuru Interpreter (Workshop Edition)")
 	fmt.Println()
 	fmt.Println("Usage:")
-	fmt.Println("  zing-interpreter <file.zing>         Run file using interpreter (default)")
-	fmt.Println("  zing-interpreter tokens <file.zing>  Inspect Lexer token stream")
-	fmt.Println("  zing-interpreter ast <file.zing>     Inspect Parser AST tree")
-	fmt.Println("  zing-interpreter repl                Start interactive REPL")
-	fmt.Println("  zing-interpreter -h, --help          Show help message")
+	fmt.Println("  nuru-interpreter <file.nuru>         Run file using interpreter (default)")
+	fmt.Println("  nuru-interpreter tokens <file.nuru>  Inspect Lexer token stream")
+	fmt.Println("  nuru-interpreter ast <file.nuru>     Inspect Parser AST tree")
+	fmt.Println("  nuru-interpreter repl                Start interactive REPL")
+	fmt.Println("  nuru-interpreter -h, --help          Show help message")
 }
 
 func main() {
@@ -145,7 +145,7 @@ func runFile(filename string) {
 }
 
 func runREPL() {
-	fmt.Println("Zing REPL (Workshop Edition)")
+	fmt.Println("Nuru REPL (Workshop Edition)")
 	fmt.Println("Type 'exit' or Ctrl+D to quit.")
 	fmt.Println()
 
@@ -153,7 +153,7 @@ func runREPL() {
 	interp := interpreter.New()
 
 	for {
-		fmt.Print("zing> ")
+		fmt.Print("nuru> ")
 		if !scanner.Scan() {
 			break
 		}

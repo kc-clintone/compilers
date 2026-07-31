@@ -3,7 +3,7 @@
 QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler)
 ===============================================================================
 Overview:
-  Transpile Zing AST nodes into clean, 1-to-1 Go source code. In this stage, you will
+  Transpile Nuru AST nodes into clean, 1-to-1 Go source code. In this stage, you will
   implement code generation rules for conditional branches, variable declarations/assignments,
   and function definitions/calls.
 
@@ -16,7 +16,7 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/compiler
-  - Compile:    ./zing-compiler examples/04-compiled.zing
+  - Compile:    ./nuru-compiler examples/04-compiled.nuru
   - Skip stage: ./savepoint.sh 4
   - Reset stage: ./savepoint.sh 3
 ===============================================================================
@@ -33,7 +33,7 @@ import (
 	"github.com/kc-clintone/compilers/internal/source"
 )
 
-// Compiler transpiles Zing AST programs directly into clean Go source code.
+// Compiler transpiles Nuru AST programs directly into clean Go source code.
 type Compiler struct {
 	buf   bytes.Buffer
 	diags []diagnostic.Diagnostic
@@ -43,12 +43,11 @@ func New() *Compiler {
 	return &Compiler{}
 }
 
-// Compile generates valid Go code from a Zing AST program.
+// Compile generates valid Go code from a Nuru AST program.
 func (c *Compiler) Compile(prog *ast.Program) (string, []diagnostic.Diagnostic) {
 	c.emit("package main\n\n")
-	c.emit("import \"fmt\"\n\n")
-	c.emit("// Suppress unused import warning if fmt is unused\n")
-	c.emit("var _ = fmt.Println\n\n")
+	c.emit("import (\n\t\"fmt\"\n\t\"reflect\"\n)\n\n")
+	c.emit("%s", nuruRuntime)
 
 	// Emit top-level function declarations
 	for _, decl := range prog.Decls {
@@ -118,8 +117,9 @@ func (c *Compiler) compileStmt(stmt ast.Stmt, indent string) {
 		c.compileIfStmt(s, indent)
 
 	case *ast.ForStmt:
-		c.emit("%sfor ", indent)
+		c.emit("%sfor nuruTruthy(", indent)
 		c.compileExpr(s.Cond)
+		c.emit(")")
 		c.compileStmt(s.Body, indent)
 		c.emit("\n")
 
@@ -183,14 +183,14 @@ func (c *Compiler) compileExpr(expr ast.Expr) {
 		}
 
 	case *ast.UnaryExpr:
-		c.emit("(%s", e.Op)
+		c.emit("nuruUnary(%q, ", e.Op)
 		c.compileExpr(e.Right)
 		c.emit(")")
 
 	case *ast.BinaryExpr:
-		c.emit("(")
+		c.emit("nuruBinary(%q, ", e.Op)
 		c.compileExpr(e.Left)
-		c.emit(" %s ", e.Op)
+		c.emit(", ")
 		c.compileExpr(e.Right)
 		c.emit(")")
 
@@ -225,6 +225,99 @@ func (c *Compiler) error(span source.Span, msg string) {
 	c.diags = append(c.diags, diagnostic.Diagnostic{Span: span, Phase: "compiler", Message: msg})
 }
 
+const nuruRuntime = `// Runtime helpers preserve Nuru's dynamic value semantics in generated Go.
+var _ = fmt.Println
+var _ = reflect.DeepEqual
+
+func nuruTruthy(value any) bool {
+	if value == nil {
+		return false
+	}
+	if boolean, ok := value.(bool); ok {
+		return boolean
+	}
+	if integer, ok := nuruInt(value); ok {
+		return integer != 0
+	}
+	return true
+}
+
+func nuruInt(value any) (int, bool) {
+	switch integer := value.(type) {
+	case int:
+		return integer, true
+	case int64:
+		return int(integer), true
+	default:
+		return 0, false
+	}
+}
+
+func nuruInts(left, right any) (int, int, bool) {
+	l, leftOK := nuruInt(left)
+	r, rightOK := nuruInt(right)
+	return l, r, leftOK && rightOK
+}
+
+func nuruUnary(operator string, value any) any {
+	switch operator {
+	case "-":
+		if integer, ok := nuruInt(value); ok {
+			return -integer
+		}
+	case "!":
+		return !nuruTruthy(value)
+	}
+	panic(fmt.Sprintf("invalid Nuru unary operation %s %T", operator, value))
+}
+
+func nuruBinary(operator string, left, right any) any {
+	switch operator {
+	case "+":
+		if l, r, ok := nuruInts(left, right); ok {
+			return l + r
+		}
+		if l, leftOK := left.(string); leftOK {
+			if r, rightOK := right.(string); rightOK {
+				return l + r
+			}
+		}
+	case "-":
+		if l, r, ok := nuruInts(left, right); ok { return l - r }
+	case "*":
+		if l, r, ok := nuruInts(left, right); ok { return l * r }
+	case "/":
+		if l, r, ok := nuruInts(left, right); ok {
+			if r == 0 { panic("division by zero") }
+			return l / r
+		}
+	case "%":
+		if l, r, ok := nuruInts(left, right); ok {
+			if r == 0 { panic("modulo by zero") }
+			return l % r
+		}
+	case "==":
+		return reflect.DeepEqual(left, right)
+	case "!=":
+		return !reflect.DeepEqual(left, right)
+	case "<":
+		if l, r, ok := nuruInts(left, right); ok { return l < r }
+	case "<=":
+		if l, r, ok := nuruInts(left, right); ok { return l <= r }
+	case ">":
+		if l, r, ok := nuruInts(left, right); ok { return l > r }
+	case ">=":
+		if l, r, ok := nuruInts(left, right); ok { return l >= r }
+	case "&&":
+		return nuruTruthy(left) && nuruTruthy(right)
+	case "||":
+		return nuruTruthy(left) || nuruTruthy(right)
+	}
+	panic(fmt.Sprintf("invalid Nuru binary operation %T %s %T", left, operator, right))
+}
+
+`
+
 /*
 ===============================================================================
 QUEST HINTS & SOLUTIONS
@@ -232,8 +325,9 @@ QUEST HINTS & SOLUTIONS
 HINT [GEN-01-HINT]:
   Implement compileIfStmt:
     func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
-        c.emit("%sif ", indent)
+        c.emit("%sif nuruTruthy(", indent)
         c.compileExpr(s.Cond)
+        c.emit(")")
         c.compileStmt(s.Then, indent)
         if s.Else != nil {
             c.emit(" else")

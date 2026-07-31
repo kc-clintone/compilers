@@ -15,14 +15,14 @@ import (
 )
 
 func printHelp() {
-	fmt.Println("Zing Compiler (Workshop Edition)")
+	fmt.Println("Nuru Compiler (Workshop Edition)")
 	fmt.Println()
 	fmt.Println("Usage:")
-	fmt.Println("  zing-compiler [-o binary] <file.zing>   Compile Zing program to native executable (default)")
-	fmt.Println("  zing-compiler tokens <file.zing>         Inspect Lexer token stream")
-	fmt.Println("  zing-compiler ast <file.zing>            Inspect Parser AST tree")
-	fmt.Println("  zing-compiler transpile [-o out.go] <f> Transpile Zing program to Go source")
-	fmt.Println("  zing-compiler -h, --help                 Show help message")
+	fmt.Println("  nuru-compiler [-o binary] <file.nuru>   Compile Nuru program to native executable (default)")
+	fmt.Println("  nuru-compiler tokens <file.nuru>         Inspect Lexer token stream")
+	fmt.Println("  nuru-compiler ast <file.nuru>            Inspect Parser AST tree")
+	fmt.Println("  nuru-compiler transpile [-o out.go] <f> Transpile Nuru program to Go source")
+	fmt.Println("  nuru-compiler -h, --help                 Show help message")
 }
 
 func main() {
@@ -187,7 +187,7 @@ func transpileFile(filename string, outputFile string) {
 }
 
 func compileToBinary(filename string, outputBinary string) {
-	tmpDir, err := os.MkdirTemp("", "zing-build-*")
+	tmpDir, err := os.MkdirTemp("", "nuru-build-*")
 	if err != nil {
 		fmt.Printf("Error creating temp dir: %v\n", err)
 		os.Exit(1)

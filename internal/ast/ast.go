@@ -32,7 +32,7 @@ type Base struct {
 
 func (b Base) GetSpan() source.Span { return b.Span }
 
-// Program represents a complete Zing compilation unit.
+// Program represents a complete Nuru compilation unit.
 type Program struct {
 	Base
 	Decls []Decl
@@ -119,10 +119,7 @@ type BinaryExpr struct {
 
 func (*BinaryExpr) expr() {}
 
-// --- Target Features for Attendees (Variables & Functions AST Nodes) ---
-
 // VarDecl represents variable declarations: var <Name> = <Init>
-// TODO: Parser - Construct VarDecl nodes when parsing variable declarations.
 type VarDecl struct {
 	Base
 	Name string
@@ -133,7 +130,6 @@ func (*VarDecl) decl() {}
 func (*VarDecl) stmt() {}
 
 // AssignStmt represents variable assignments: <Name> = <Value>
-// TODO: Parser - Construct AssignStmt nodes when parsing assignment statements.
 type AssignStmt struct {
 	Base
 	Name  string
@@ -143,7 +139,6 @@ type AssignStmt struct {
 func (*AssignStmt) stmt() {}
 
 // IdentExpr represents variable lookups by identifier name.
-// TODO: Parser - Construct IdentExpr nodes when parsing identifiers in expressions.
 type IdentExpr struct {
 	Base
 	Name string
@@ -152,7 +147,6 @@ type IdentExpr struct {
 func (*IdentExpr) expr() {}
 
 // FuncDecl represents function declarations: func <Name>(<Params>) { <Body> }
-// TODO: Parser - Construct FuncDecl nodes when parsing function declarations.
 type FuncDecl struct {
 	Base
 	Name   string
@@ -163,7 +157,6 @@ type FuncDecl struct {
 func (*FuncDecl) decl() {}
 
 // CallExpr represents function calls: <Callee>(<Args>)
-// TODO: Parser - Construct CallExpr nodes when parsing function call expressions.
 type CallExpr struct {
 	Base
 	Callee string
@@ -173,7 +166,6 @@ type CallExpr struct {
 func (*CallExpr) expr() {}
 
 // ReturnStmt represents returning a value from a function: return <Value>
-// TODO: Parser - Construct ReturnStmt nodes when parsing return statements.
 type ReturnStmt struct {
 	Base
 	Value Expr

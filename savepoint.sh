@@ -3,11 +3,11 @@ set -e
 
 if [ -z "$1" ]; then
     echo "Usage: $0 <stage_number (0-4)>"
-    echo "  0: 0-base        (Initial scaffold with QUEST tasks)"
-    echo "  1: 1-lexer       (Lexer QUEST solved: digits, identifiers, var/func tokens)"
-    echo "  2: 2-parser      (Parser QUEST solved: if/else, var, func, call, return)"
-    echo "  3: 3-interpreter (Interpreter QUEST solved: branches, env, function frames)"
-    echo "  4: 4-compiler    (Compiler QUEST solved: Go transpilation complete)"
+    echo "  0: 0-base        (Nuru workshop starter — all QUEST tasks ready)"
+    echo "  1: 1-lexer       (Nuru lexer QUEST complete — digits, identifiers, and var/func tokens)"
+    echo "  2: 2-parser      (Nuru parser QUEST complete — branches, variables, functions, calls, and returns)"
+    echo "  3: 3-interpreter (Nuru interpreter QUEST complete — environments, branches, and function call frames)"
+    echo "  4: 4-compiler    (Nuru transpiler QUEST complete — Go code generation)"
     exit 1
 fi
 
@@ -26,4 +26,4 @@ esac
 echo "Resetting repository to checkpoint tag: $TAG..."
 git reset --hard "$TAG"
 git clean -fd
-echo "Successfully restored worktree to $TAG!"
+echo "Successfully restored repository checkpoint $TAG!"

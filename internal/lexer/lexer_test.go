@@ -8,7 +8,7 @@ import (
 
 func TestLexerSymbols(t *testing.T) {
 	input := `+ - * / ( ) { } = == != < > <= >= && ||`
-	toks, diags := Lex("test.zing", []byte(input))
+	toks, diags := Lex("test.nuru", []byte(input))
 	if len(diags) > 0 {
 		t.Fatalf("unexpected lexer diagnostics: %v", diags)
 	}

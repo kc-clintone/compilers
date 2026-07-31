@@ -15,9 +15,12 @@ Tasks in this file:
 
 Commands:
   - Run tests:  go test ./internal/lexer
-  - Inspect:    ./zing-interpreter tokens examples/01-tokens.zing
+  - Inspect:    ./nuru-interpreter tokens examples/01-tokens.nuru
   - Skip stage: ./savepoint.sh 1
   - Reset stage: ./savepoint.sh 0
+
+Tip: Delete the // TASK [...] comment line when you complete a task so
+     grep -rn "TASK \[" . tracks your remaining work!
 ===============================================================================
 */
 
@@ -32,7 +35,7 @@ import (
 	"github.com/kc-clintone/compilers/internal/token"
 )
 
-// Lexer converts Zing source bytes into a sequence of Tokens.
+// Lexer converts Nuru source bytes into a sequence of Tokens.
 type Lexer struct {
 	filename       string
 	src            []byte
@@ -201,18 +204,7 @@ func (l *Lexer) identifier() {
 	// TASK [LEX-02]: Implement keyword matching for reserved words ('var', 'func', 'if', 'else', 'true', 'false')!
 	// Look up 'raw' in token.Keywords. If present, add the corresponding token kind; otherwise add token.Ident.
 	// See HINT [LEX-02-HINT] at the bottom of this file for details.
-	if k, ok := token.Keywords[raw]; ok {
-		switch k {
-		case token.True:
-			l.add(k, true)
-		case token.False:
-			l.add(k, false)
-		default:
-			l.add(k, nil)
-		}
-	} else {
-		l.add(token.Ident, raw)
-	}
+	l.add(token.Ident, raw)
 }
 
 func (l *Lexer) stringLiteral() {
@@ -256,12 +248,10 @@ func (l *Lexer) stringLiteral() {
 // See HINT [LEX-01-HINT] at the bottom of this file for details.
 
 func isDigit(c byte) bool {
-	// TODO: implement isDigit helper
 	return false
 }
 
 func isIdentStart(c byte) bool {
-	// TODO: implement isIdentStart helper
 	return false
 }
 
