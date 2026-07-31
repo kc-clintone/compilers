@@ -58,6 +58,15 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 		t.Fatalf("generated source = %q, %v", contents, err)
 	}
 
+	defaultGenerated, defaultInput, ok := outputArgs([]string{valid}, filepath.Base(valid)+".go", &stderr)
+	if !ok || defaultGenerated != "program.nuru.go" || defaultInput != valid {
+		t.Fatalf("default transpile output=%q input=%q ok=%v", defaultGenerated, defaultInput, ok)
+	}
+	defaultBinary, defaultInput, ok := outputArgs([]string{valid}, "nuru.out", &stderr)
+	if !ok || defaultBinary != "nuru.out" || defaultInput != valid {
+		t.Fatalf("default binary output=%q input=%q ok=%v", defaultBinary, defaultInput, ok)
+	}
+
 	binary := filepath.Join(t.TempDir(), "program")
 	stderr.Reset()
 	if code := RunCompiler(context.Background(), []string{"-o", binary, valid}, Streams{Stderr: &stderr}); code != 0 {
@@ -74,7 +83,7 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 		text string
 	}{
 		{"source error", []string{"check", invalid}, 1, "checker:"},
-		{"usage", []string{"transpile", valid}, 2, "usage: nuru-compiler"},
+		{"usage", []string{"transpile"}, 2, "usage: nuru-compiler"},
 		{"invalid flags", []string{"-x", valid}, 2, "usage: nuru-compiler"},
 		{"same path", []string{"transpile", "-o", valid, valid}, 2, "output path must differ"},
 	}

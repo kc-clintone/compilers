@@ -27,8 +27,8 @@ go build -o ./nuru-compiler ./cmd/nuru-compiler
 ./nuru-interpreter check examples/04-functions.nuru
 ./nuru-interpreter examples/04-functions.nuru
 ./nuru-compiler check examples/04-functions.nuru
-./nuru-compiler transpile -o /tmp/functions.go examples/04-functions.nuru
-./nuru-compiler -o /tmp/functions examples/04-functions.nuru
+./nuru-compiler transpile examples/04-functions.nuru # writes ./04-functions.nuru.go
+./nuru-compiler examples/04-functions.nuru           # writes ./nuru.out
 /tmp/functions
 ```
 

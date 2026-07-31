@@ -116,7 +116,7 @@ func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 // without terminating the host process.
 func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
-	if len(args) < 2 {
+	if len(args) < 1 {
 		compilerUsage(streams.Stderr)
 		return 2
 	}
@@ -138,9 +138,9 @@ func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 	var output, input string
 	var ok bool
 	if isTranspile {
-		output, input, ok = outputArgs(args[1:], streams.Stderr)
+		output, input, ok = outputArgs(args[1:], filepath.Base(args[len(args)-1])+".go", streams.Stderr)
 	} else {
-		output, input, ok = outputArgs(args, streams.Stderr)
+		output, input, ok = outputArgs(args, "nuru.out", streams.Stderr)
 	}
 	if !ok {
 		compilerUsage(streams.Stderr)
@@ -216,17 +216,23 @@ func hasModuleFeatures(program *ast.Program) bool {
 	return false
 }
 
-func outputArgs(args []string, stderr io.Writer) (string, string, bool) {
-	if len(args) != 3 || args[0] != "-o" || args[1] == "" || args[2] == "" {
+func outputArgs(args []string, defaultOutput string, stderr io.Writer) (string, string, bool) {
+	var output, input string
+	switch {
+	case len(args) == 1 && args[0] != "":
+		output, input = defaultOutput, args[0]
+	case len(args) == 3 && args[0] == "-o" && args[1] != "" && args[2] != "":
+		output, input = args[1], args[2]
+	default:
 		return "", "", false
 	}
-	output, _ := filepath.Abs(args[1])
-	input, _ := filepath.Abs(args[2])
-	if output == input {
+	absoluteOutput, _ := filepath.Abs(output)
+	absoluteInput, _ := filepath.Abs(input)
+	if absoluteOutput == absoluteInput {
 		fmt.Fprintln(stderr, "output path must differ from input")
 		return "", "", false
 	}
-	return args[1], args[2], true
+	return output, input, true
 }
 
 func interpreterUsage(stderr io.Writer) {
@@ -234,5 +240,5 @@ func interpreterUsage(stderr io.Writer) {
 }
 
 func compilerUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: nuru-compiler check <file> | nuru-compiler transpile -o <go-file> <file> | nuru-compiler -o <binary> <file>")
+	fmt.Fprintln(stderr, "usage: nuru-compiler check <file> | nuru-compiler transpile [-o <go-file>] <file> | nuru-compiler [-o <binary>] <file>")
 }
