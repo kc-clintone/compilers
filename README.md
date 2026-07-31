@@ -68,7 +68,7 @@ differential tests for successful and failing programs.
 ## Teaching and learning material
 
 - [Zing v1 language reference](docs/language.md)
-- [Bootstrap-readiness matrix](docs/bootstrap.md)
+- [Language evolution roadmap](docs/ROADMAP.md)
 - [Guided teaching walkthrough](docs/teaching-guide.md)
 - [Latest verification record](docs/verification.md)
 
