@@ -92,6 +92,6 @@ Diagnostics use `file:line:column: phase: message`, where phase is `lexer`,
 `parser`, `checker`, or `runtime`. A phase does not run after its prerequisite
 reports errors.
 
-Use `zing-interpreter check/run` for direct execution and
-`zing-compiler check/transpile/build` for Go generation. Both tools return 0 on
+Use `zing-interpreter` (or `zing-interpreter check`) for direct execution and
+`zing-compiler` (or `zing-compiler check/transpile`) for Go generation. Both tools return 0 on
 success, 1 for program/build failures, and 2 for invalid usage.

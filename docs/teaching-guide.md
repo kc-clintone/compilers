@@ -14,7 +14,7 @@ go test ./...
 go build -o /tmp/zing-interpreter ./cmd/zing-interpreter
 go build -o /tmp/zing-compiler ./cmd/zing-compiler
 /tmp/zing-interpreter check examples/source-analyzer.zing
-/tmp/zing-interpreter run examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing > /tmp/analyzer-interpreted.stdout
+/tmp/zing-interpreter examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing > /tmp/analyzer-interpreted.stdout
 cmp /tmp/analyzer-interpreted.stdout examples/expected/source-analyzer.stdout
 ```
 
@@ -45,7 +45,7 @@ expected results without running the Go toolchain.
 4. **Build and compare both back ends.** Run:
 
    ```sh
-   /tmp/zing-compiler build -o /tmp/source-analyzer examples/source-analyzer.zing
+   /tmp/zing-compiler -o /tmp/source-analyzer examples/source-analyzer.zing
    /tmp/source-analyzer examples/fixtures/analyzer-input.zing > /tmp/analyzer-compiled.stdout
    cmp /tmp/analyzer-interpreted.stdout /tmp/analyzer-compiled.stdout
    ```

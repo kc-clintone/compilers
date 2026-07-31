@@ -36,12 +36,11 @@ func (streams Streams) normalized() Streams {
 // code without terminating the host process.
 func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
-	if len(args) < 2 {
+	if len(args) < 1 {
 		interpreterUsage(streams.Stderr)
 		return 2
 	}
-	switch args[0] {
-	case "check":
+	if args[0] == "check" {
 		if len(args) != 2 {
 			interpreterUsage(streams.Stderr)
 			return 2
@@ -51,28 +50,26 @@ func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 			return 1
 		}
 		return 0
-	case "run":
-		programArgs := []string{}
-		if len(args) > 2 {
-			if args[2] != "--" {
-				interpreterUsage(streams.Stderr)
-				return 2
-			}
-			programArgs = args[3:]
-		}
-		program, info, ok := frontEnd(args[1], streams.Stderr)
-		if !ok {
-			return 1
-		}
-		if err := interpreter.Run(ctx, program, info, interpreter.Options{Args: programArgs, Stdout: streams.Stdout}); err != nil {
-			fmt.Fprintln(streams.Stderr, err)
-			return 1
-		}
-		return 0
-	default:
-		interpreterUsage(streams.Stderr)
-		return 2
 	}
+
+	filename := args[0]
+	programArgs := []string{}
+	if len(args) > 1 {
+		if args[1] != "--" {
+			interpreterUsage(streams.Stderr)
+			return 2
+		}
+		programArgs = args[2:]
+	}
+	program, info, ok := frontEnd(filename, streams.Stderr)
+	if !ok {
+		return 1
+	}
+	if err := interpreter.Run(ctx, program, info, interpreter.Options{Args: programArgs, Stdout: streams.Stdout}); err != nil {
+		fmt.Fprintln(streams.Stderr, err)
+		return 1
+	}
+	return 0
 }
 
 // RunCompiler executes one zing-compiler invocation and returns its exit code
@@ -94,11 +91,14 @@ func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 		}
 		return 0
 	}
-	if args[0] != "transpile" && args[0] != "build" {
-		compilerUsage(streams.Stderr)
-		return 2
+	isTranspile := args[0] == "transpile"
+	var output, input string
+	var ok bool
+	if isTranspile {
+		output, input, ok = outputArgs(args[1:], streams.Stderr)
+	} else {
+		output, input, ok = outputArgs(args, streams.Stderr)
 	}
-	output, input, ok := outputArgs(args[1:], streams.Stderr)
 	if !ok {
 		compilerUsage(streams.Stderr)
 		return 2
@@ -112,7 +112,7 @@ func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 		fmt.Fprintln(streams.Stderr, err)
 		return 1
 	}
-	if args[0] == "transpile" {
+	if isTranspile {
 		err = os.WriteFile(output, source, 0o644)
 	} else {
 		err = compiler.Build(ctx, source, output)
@@ -161,9 +161,9 @@ func outputArgs(args []string, stderr io.Writer) (string, string, bool) {
 }
 
 func interpreterUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: zing-interpreter check <file> | zing-interpreter run <file> [-- program-args...]")
+	fmt.Fprintln(stderr, "usage: zing-interpreter check <file> | zing-interpreter <file> [-- program-args...]")
 }
 
 func compilerUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: zing-compiler check <file> | zing-compiler transpile -o <go-file> <file> | zing-compiler build -o <binary> <file>")
+	fmt.Fprintln(stderr, "usage: zing-compiler check <file> | zing-compiler transpile -o <go-file> <file> | zing-compiler -o <binary> <file>")
 }

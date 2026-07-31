@@ -25,23 +25,23 @@ go build -o ./zing-interpreter ./cmd/zing-interpreter
 go build -o ./zing-compiler ./cmd/zing-compiler
 
 ./zing-interpreter check examples/04-functions.zing
-./zing-interpreter run examples/04-functions.zing
+./zing-interpreter examples/04-functions.zing
 ./zing-compiler check examples/04-functions.zing
 ./zing-compiler transpile -o /tmp/functions.go examples/04-functions.zing
-./zing-compiler build -o /tmp/functions examples/04-functions.zing
+./zing-compiler -o /tmp/functions examples/04-functions.zing
 /tmp/functions
 ```
 
 Interpreter program arguments must follow `--`:
 
 ```sh
-./zing-interpreter run examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing
+./zing-interpreter examples/source-analyzer.zing -- examples/fixtures/analyzer-input.zing
 ```
 
 A compiled program receives its arguments normally:
 
 ```sh
-./zing-compiler build -o /tmp/source-analyzer examples/source-analyzer.zing
+./zing-compiler -o /tmp/source-analyzer examples/source-analyzer.zing
 /tmp/source-analyzer examples/fixtures/analyzer-input.zing
 ```
 

@@ -21,11 +21,10 @@ func TestInterpreterCommandsAndExitCodes(t *testing.T) {
 		err  string
 	}{
 		{"check", []string{"check", valid}, 0, "", ""},
-		{"run", []string{"run", valid, "--", "hello"}, 0, "1 hello\n", ""},
+		{"run", []string{valid, "--", "hello"}, 0, "1 hello\n", ""},
 		{"source error", []string{"check", invalid}, 1, "", "checker:"},
 		{"missing command", nil, 2, "", "usage: zing-interpreter"},
-		{"unknown command", []string{"build", valid}, 2, "", "usage: zing-interpreter"},
-		{"arguments need separator", []string{"run", valid, "hello"}, 2, "", "usage: zing-interpreter"},
+		{"arguments need separator", []string{valid, "hello"}, 2, "", "usage: zing-interpreter"},
 	}
 
 	for _, test := range tests {
@@ -58,7 +57,7 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 
 	binary := filepath.Join(t.TempDir(), "program")
 	stderr.Reset()
-	if code := RunCompiler(context.Background(), []string{"build", "-o", binary, valid}, Streams{Stderr: &stderr}); code != 0 {
+	if code := RunCompiler(context.Background(), []string{"-o", binary, valid}, Streams{Stderr: &stderr}); code != 0 {
 		t.Fatalf("build code=%d stderr=%q", code, stderr.String())
 	}
 	if output, err := exec.Command(binary).CombinedOutput(); err != nil || string(output) != "compiled\n" {
@@ -73,7 +72,7 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 	}{
 		{"source error", []string{"check", invalid}, 1, "checker:"},
 		{"usage", []string{"transpile", valid}, 2, "usage: zing-compiler"},
-		{"unknown", []string{"run", valid}, 2, "usage: zing-compiler"},
+		{"invalid flags", []string{"-x", valid}, 2, "usage: zing-compiler"},
 		{"same path", []string{"transpile", "-o", valid, valid}, 2, "output path must differ"},
 	}
 	for _, test := range tests {
