@@ -432,9 +432,27 @@ func (p *Parser) returnStmt() ast.Stmt {
 	return s
 }
 
-var prec = map[token.Kind]int{token.Or: 1, token.And: 2, token.Equal: 3, token.NotEqual: 3, token.Less: 4, token.LessEqual: 4, token.Greater: 4, token.GreaterEqual: 4, token.Plus: 5, token.Minus: 5, token.Star: 6, token.Slash: 6, token.Percent: 6}
+// --- Recursive Descent Expression Parser ---
+//
+// Expression parsing enforces operator precedence using a strict function call hierarchy
+// to make grammar rules transparent and easy for learners to follow:
+//
+//   1. expression()  -> logicalOr()
+//   2. logicalOr()   -> logicalAnd() ("||" logicalAnd())*
+//   3. logicalAnd()  -> equality() ("&&" equality())*
+//   4. equality()    -> comparison() (("==" | "!=") comparison())*
+//   5. comparison()  -> term() (("<" | "<=" | ">" | ">=") term())*
+//   6. term()        -> factor() (("+" | "-") factor())*
+//   7. factor()      -> unary() (("*" | "/" | "%") unary())*
+//   8. unary()       -> ("!" | "-") unary() | postfix()
+//   9. postfix()     -> primary() ("(" args? ")" | "." ident | "[" index/slice "]")*
+//  10. primary()     -> literals | identifiers | "(" expression ")" | make(...) | composite lit
 
-func (p *Parser) expression() ast.Expr { return p.binary(1) }
+// expression is the entry point for parsing expressions.
+func (p *Parser) expression() ast.Expr {
+	return p.logicalOr()
+}
+
 func (p *Parser) conditionExpression() ast.Expr {
 	// A named composite literal and a control-flow body both start with an
 	// identifier followed by "{". Leave that brace for the statement parser
@@ -445,26 +463,103 @@ func (p *Parser) conditionExpression() ast.Expr {
 	defer func() { p.allowNamedComposite = previous }()
 	return p.expression()
 }
-func (p *Parser) binary(min int) ast.Expr {
-	left := p.unary()
 
-	for {
-		level, ok := prec[p.peek().Kind]
+// logicalOr parses logical OR expressions ("||") at the lowest binary precedence level.
+// Grammar: LogicalOr -> LogicalAnd ( "||" LogicalAnd )*
+func (p *Parser) logicalOr() ast.Expr {
+	left := p.logicalAnd()
 
-		if !ok || level < min {
-			break
-		}
-
-		op := p.advance()
-		right := p.binary(level + 1)
+	for p.match(token.Or) {
+		op := p.previous()
+		right := p.logicalAnd()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
-
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
 
 	return left
 }
+
+// logicalAnd parses logical AND expressions ("&&").
+// Grammar: LogicalAnd -> Equality ( "&&" Equality )*
+func (p *Parser) logicalAnd() ast.Expr {
+	left := p.equality()
+
+	for p.match(token.And) {
+		op := p.previous()
+		right := p.equality()
+		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+		b.Span = merge(left.GetSpan(), right.GetSpan())
+		left = b
+	}
+
+	return left
+}
+
+// equality parses equality comparison expressions ("==", "!=").
+// Grammar: Equality -> Comparison ( ( "==" | "!=" ) Comparison )*
+func (p *Parser) equality() ast.Expr {
+	left := p.comparison()
+
+	for p.match(token.Equal, token.NotEqual) {
+		op := p.previous()
+		right := p.comparison()
+		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+		b.Span = merge(left.GetSpan(), right.GetSpan())
+		left = b
+	}
+
+	return left
+}
+
+// comparison parses relational comparison expressions ("<", "<=", ">", ">=").
+// Grammar: Comparison -> Term ( ( "<" | "<=" | ">" | ">=" ) Term )*
+func (p *Parser) comparison() ast.Expr {
+	left := p.term()
+
+	for p.match(token.Less, token.LessEqual, token.Greater, token.GreaterEqual) {
+		op := p.previous()
+		right := p.term()
+		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+		b.Span = merge(left.GetSpan(), right.GetSpan())
+		left = b
+	}
+
+	return left
+}
+
+// term parses addition and subtraction expressions ("+", "-").
+// Grammar: Term -> Factor ( ( "+" | "-" ) Factor )*
+func (p *Parser) term() ast.Expr {
+	left := p.factor()
+
+	for p.match(token.Plus, token.Minus) {
+		op := p.previous()
+		right := p.factor()
+		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+		b.Span = merge(left.GetSpan(), right.GetSpan())
+		left = b
+	}
+
+	return left
+}
+
+// factor parses multiplication, division, and modulo expressions ("*", "/", "%").
+// Grammar: Factor -> Unary ( ( "*" | "/" | "%" ) Unary )*
+func (p *Parser) factor() ast.Expr {
+	left := p.unary()
+
+	for p.match(token.Star, token.Slash, token.Percent) {
+		op := p.previous()
+		right := p.unary()
+		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+		b.Span = merge(left.GetSpan(), right.GetSpan())
+		left = b
+	}
+
+	return left
+}
+
 func (p *Parser) unary() ast.Expr {
 	if p.match(token.Bang, token.Minus) {
 		op := p.previous()

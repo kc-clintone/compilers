@@ -126,6 +126,7 @@ func runSource(ctx context.Context, source string, options Options) (string, err
 	info, diagnostics := checker.Check(program)
 	if len(diagnostics) != 0 {
 		return "", fmt.Errorf("check: %v", diagnostics)
+	}
 	var output bytes.Buffer
 	options.Stdout = &output
 	err := Run(ctx, program, info, options)
