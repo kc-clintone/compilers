@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer)
+QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer) [COMPLETED]
 ===============================================================================
 Overview:
   The lexer is the first compiler stage. It walks source bytes from left to right
@@ -11,8 +11,8 @@ Overview:
   from reserved words, and preserve boolean literal values for later stages.
 
 Tasks in this file:
-  - TASK [LEX-01]: Classify digits and identifier-start characters.
-  - TASK [LEX-02]: Emit identifiers, reserved keywords, and boolean literals.
+  - [COMPLETED] TASK [LEX-01]: Classify digits and identifier-start characters.
+  - [COMPLETED] TASK [LEX-02]: Emit identifiers, reserved keywords, and boolean literals.
 
 Commands:
   - Run tests:  go test ./internal/lexer
@@ -20,8 +20,6 @@ Commands:
   - Skip stage: ./savepoint.sh 1
   - Reset stage: ./savepoint.sh 0
 
-Tip: Delete the // TASK [...] comment line when you complete a task so
-     grep -rn "TASK \[" . tracks your remaining work!
 ===============================================================================
 */
 
@@ -230,9 +228,17 @@ func (l *Lexer) identifier() {
 	}
 	raw := string(l.src[l.start:l.current])
 
-	// TASK [LEX-02]: Emit the identifier or reserved keyword represented by raw.
-	// Use token.Keywords, token.True, token.False, token.Ident, and l.add.
-	// See HINT [LEX-02-HINT] at the bottom of this file for details.
+	if kind, ok := token.Keywords[raw]; ok {
+		switch kind {
+		case token.True:
+			l.add(kind, true)
+		case token.False:
+			l.add(kind, false)
+		default:
+			l.add(kind, nil)
+		}
+		return
+	}
 	l.add(token.Ident, raw)
 }
 
@@ -274,18 +280,14 @@ func (l *Lexer) stringLiteral() {
 }
 
 // isDigit reports whether c is an ASCII decimal digit.
-//
-// TASK [LEX-01]: Implement isDigit and isIdentStart using ASCII byte ranges.
-// Use direct byte comparisons for '0'-'9', '_', 'a'-'z', and 'A'-'Z'.
-// See HINT [LEX-01-HINT] at the bottom of this file for details.
 func isDigit(c byte) bool {
-	return false
+	return c >= '0' && c <= '9'
 }
 
 // isIdentStart reports whether c can begin a Nuru identifier: an ASCII letter
 // or underscore. Digits are accepted only after the first character.
 func isIdentStart(c byte) bool {
-	return false
+	return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
 }
 
 // isIdentPart reports whether c may follow the first identifier character.

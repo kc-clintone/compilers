@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)
+QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary) [COMPLETED]
 ===============================================================================
 Overview:
   Token kinds are the shared vocabulary between the lexer and parser. The lexer
@@ -10,7 +10,7 @@ Overview:
   variable and function declarations.
 
 Tasks in this file:
-  - TASK [LEX-03]: Define and register the var and func keyword kinds.
+  - [COMPLETED] TASK [LEX-03]: Define and register the var and func keyword kinds.
 
 Commands:
   - Run tests:  go test ./internal/token ./internal/lexer
@@ -67,9 +67,8 @@ const (
 	True     Kind = "true"
 	False    Kind = "false"
 
-	// TASK [LEX-03]: Define Var and Func kinds using their Nuru source spellings.
-	// Then register both constants in Keywords below.
-	// See HINT [LEX-03-HINT] at the bottom of this file for details.
+	Var  Kind = "var"
+	Func Kind = "func"
 )
 
 // Token contains a scanned token's kind, literal representation, source text, and span.
@@ -106,7 +105,8 @@ var Keywords = map[string]Kind{
 	"continue": Continue,
 	"true":     True,
 	"false":    False,
-	// TASK [LEX-03]: Register the "var" and "func" spellings here.
+	"var":      Var,
+	"func":     Func,
 }
 
 /*
