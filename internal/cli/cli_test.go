@@ -26,7 +26,7 @@ func TestInterpreterCommandsAndExitCodes(t *testing.T) {
 		{"default repl", nil, "1 + 2;\nexit\n", 0, "3\n", ""},
 		{"--repl mode", []string{"--repl", valid}, "exit\n", 0, "", ""},
 		{"source error", []string{"check", invalid}, "", 1, "", "checker:"},
-		{"arguments need separator", []string{valid, "hello"}, "", 2, "", "usage: nuru-interpreter"},
+		{"arguments need separator", []string{valid, "hello"}, "", 2, "", "SYNOPSIS"},
 	}
 
 	for _, test := range tests {
@@ -83,8 +83,8 @@ func TestCompilerCommandsAndExitCodes(t *testing.T) {
 		text string
 	}{
 		{"source error", []string{"check", invalid}, 1, "checker:"},
-		{"usage", []string{"transpile"}, 2, "usage: nuru-compiler"},
-		{"invalid flags", []string{"-x", valid}, 2, "usage: nuru-compiler"},
+		{"usage", []string{"transpile"}, 2, "SYNOPSIS"},
+		{"invalid flags", []string{"-x", valid}, 2, "SYNOPSIS"},
 		{"same path", []string{"transpile", "-o", valid, valid}, 2, "output path must differ"},
 	}
 	for _, test := range tests {
@@ -106,6 +106,46 @@ func TestModuleWarning(t *testing.T) {
 	code := RunInterpreter(context.Background(), []string{"--repl", file1, file2}, Streams{Stdout: &stdout, Stderr: &stderr, Stdin: strings.NewReader("exit\n")})
 	if code != 0 || !strings.Contains(stderr.String(), "warning: multiple files/modules have yet to be implemented") {
 		t.Fatalf("code=%d stderr=%q", code, stderr.String())
+	}
+}
+
+func TestHelpDocumentsCommandsAndOptions(t *testing.T) {
+	tests := []struct {
+		name string
+		run  func(Streams) int
+		want []string
+	}{
+		{
+			name: "interpreter",
+			run: func(streams Streams) int {
+				return RunInterpreter(context.Background(), []string{"--help"}, streams)
+			},
+			want: []string{"NAME", "SYNOPSIS", "DESCRIPTION", "COMMANDS", "OPTIONS", "check FILE", "--repl [FILE...]", "-h, --help", "--", "args()"},
+		},
+		{
+			name: "compiler",
+			run: func(streams Streams) int {
+				return RunCompiler(context.Background(), []string{"--help"}, streams)
+			},
+			want: []string{"NAME", "SYNOPSIS", "DESCRIPTION", "COMMANDS", "OPTIONS", "check FILE", "transpile [-o GO-FILE] FILE", "-o PATH", "-h, --help", "nuru.out"},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var stdout, stderr bytes.Buffer
+			if code := test.run(Streams{Stdout: &stdout, Stderr: &stderr}); code != 0 {
+				t.Fatalf("code=%d stderr=%q", code, stderr.String())
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("stderr=%q", stderr.String())
+			}
+			for _, want := range test.want {
+				if !strings.Contains(stdout.String(), want) {
+					t.Errorf("help does not contain %q:\n%s", want, stdout.String())
+				}
+			}
+		})
 	}
 }
 

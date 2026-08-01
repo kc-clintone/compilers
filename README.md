@@ -61,7 +61,6 @@ node-ID-keyed type, symbol, struct, and built-in resolutions consumed by both
 back ends. `nuru.g4` remains a readable parser-generator reference; production
 builds use the handwritten lexer and a pure **Recursive Descent** parser for expressions to maximize readability for learners.
 
-
 Tests include lexer and parser fuzz targets, semantic and runtime unit tests,
 generated-Go tests, both CLI contracts, and interpreter-versus-compiled
 differential tests for successful and failing programs.

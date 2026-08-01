@@ -40,6 +40,10 @@ func (streams Streams) normalized() Streams {
 // code without terminating the host process.
 func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
+	if len(args) > 0 && isHelp(args[0]) {
+		interpreterUsage(streams.Stdout)
+		return 0
+	}
 	if len(args) == 0 {
 		if err := interpreter.RunREPL(ctx, nil, nil, interpreter.Options{Stdout: streams.Stdout, Stderr: streams.Stderr, Stdin: streams.Stdin}); err != nil {
 			fmt.Fprintln(streams.Stderr, err)
@@ -116,6 +120,10 @@ func RunInterpreter(ctx context.Context, args []string, streams Streams) int {
 // without terminating the host process.
 func RunCompiler(ctx context.Context, args []string, streams Streams) int {
 	streams = streams.normalized()
+	if len(args) > 0 && isHelp(args[0]) {
+		compilerUsage(streams.Stdout)
+		return 0
+	}
 	if len(args) < 1 {
 		compilerUsage(streams.Stderr)
 		return 2
@@ -235,10 +243,82 @@ func outputArgs(args []string, defaultOutput string, stderr io.Writer) (string, 
 	return output, input, true
 }
 
-func interpreterUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: nuru-interpreter [--repl [files...]] | nuru-interpreter check <file> | nuru-interpreter <file> [-- program-args...]")
+func isHelp(arg string) bool {
+	return arg == "-h" || arg == "--help"
 }
 
-func compilerUsage(stderr io.Writer) {
-	fmt.Fprintln(stderr, "usage: nuru-compiler check <file> | nuru-compiler transpile [-o <go-file>] <file> | nuru-compiler [-o <binary>] <file>")
+func interpreterUsage(w io.Writer) {
+	name := filepath.Base(os.Args[0])
+	fmt.Fprintf(w, `%s(1)
+
+NAME
+    %s - check and directly execute Nuru programs
+
+SYNOPSIS
+    %s
+    %s --repl [FILE...]
+    %s check FILE
+    %s FILE [-- ARG...]
+    %s (-h | --help)
+
+DESCRIPTION
+    Starts an interactive REPL when invoked without arguments. A source file can
+    be checked without running it, executed directly, or loaded before starting
+    the REPL.
+
+COMMANDS
+    check FILE
+        Parse and type-check FILE without executing it.
+
+    FILE [-- ARG...]
+        Execute FILE directly. Arguments after -- are passed to the program.
+
+OPTIONS
+    --repl [FILE...]
+        Start the REPL, optionally loading one or more files first.
+
+    -h, --help
+        Print this help page and exit.
+
+    --
+        End interpreter options. Remaining arguments are passed to the Nuru
+        program and are available through args().
+`, name, name, name, name, name, name, name)
+}
+
+func compilerUsage(w io.Writer) {
+	name := filepath.Base(os.Args[0])
+	fmt.Fprintf(w, `%s(1)
+
+NAME
+    %s - check, transpile, and build Nuru programs
+
+SYNOPSIS
+    %s check FILE
+    %s transpile [-o GO-FILE] FILE
+    %s [-o BINARY] FILE
+    %s (-h | --help)
+
+DESCRIPTION
+    Checks Nuru source, translates it to Go, or builds it as a native executable.
+    Building is the default operation when no command is given.
+
+COMMANDS
+    check FILE
+        Parse and type-check FILE without producing output.
+
+    transpile [-o GO-FILE] FILE
+        Write generated Go source. The default output is <input-basename>.go.
+
+    FILE
+        Build FILE as a native executable. This is the default operation.
+
+OPTIONS
+    -o PATH
+        Set the generated Go file or executable path. The default executable is
+        ./nuru.out.
+
+    -h, --help
+        Print this help page and exit.
+`, name, name, name, name, name, name)
 }
