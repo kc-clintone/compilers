@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler)
+QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler) [COMPLETED]
 ===============================================================================
 Overview:
   The compiler is the second consumer of the parser's AST. It emits equivalent,
@@ -11,9 +11,9 @@ Overview:
   functions, calls, and returns already supported by the interpreter.
 
 Tasks in this file:
-  - TASK [GEN-01]: Emit conditional branches.
-  - TASK [GEN-02]: Emit variable declarations, assignments, and identifiers.
-  - TASK [GEN-03]: Emit functions, calls, and returns.
+  - [COMPLETED] TASK [GEN-01]: Emit conditional branches.
+  - [COMPLETED] TASK [GEN-02]: Emit variable declarations, assignments, and identifiers.
+  - [COMPLETED] TASK [GEN-03]: Emit functions, calls, and returns.
 
 Commands:
   - Run tests:  go test ./internal/compiler
@@ -83,22 +83,28 @@ func (c *Compiler) compileDecl(decl ast.Decl) {
 
 // compileFuncDecl emits a Go function whose parameters and result use any, then
 // delegates body emission to compileStmt.
-//
-// TASK [GEN-03]: Emit func Name(params any) any and the function body.
-// Use c.emit, c.compileStmt, d.Name, d.Params, and d.Body.
-// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileFuncDecl(d *ast.FuncDecl) {
-	c.error(d.GetSpan(), "function declaration code generation is not implemented in Stage 0/1/2/3")
+	c.emit("func %s(", d.Name)
+	for index, parameter := range d.Params {
+		if index > 0 {
+			c.emit(", ")
+		}
+		c.emit("%s any", parameter)
+	}
+	c.emit(") any")
+	c.compileStmt(d.Body, "")
+	c.emit("\n\n")
 }
 
 // compileVarDecl emits an indented Go var declaration using any and includes an
 // initializer only when the Nuru declaration has one.
-//
-// TASK [GEN-02]: Emit var Name any, its optional initializer, and a newline.
-// Use c.emit, c.compileExpr, d.Name, d.Init, and indent.
-// See HINT [GEN-02-HINT] at the bottom of this file for details.
 func (c *Compiler) compileVarDecl(d *ast.VarDecl, indent string) {
-	c.error(d.GetSpan(), "variable declaration code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%svar %s any", indent, d.Name)
+	if d.Init != nil {
+		c.emit(" = ")
+		c.compileExpr(d.Init)
+	}
+	c.emit("\n")
 }
 
 // compileStmt emits one statement with the supplied indentation and dispatches
@@ -163,29 +169,39 @@ func (c *Compiler) compileStmt(stmt ast.Stmt, indent string) {
 
 // compileIfStmt emits an if statement whose condition passes through
 // nuruTruthy. It preserves Go's required adjacency for else and else-if.
-//
-// TASK [GEN-01]: Emit if nuruTruthy(condition), then, and optional else branches.
-// Use c.emit, c.compileExpr, c.compileStmt, s.Cond, s.Then, and s.Else.
-// See HINT [GEN-01-HINT] at the bottom of this file for details.
 func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
-	c.error(s.GetSpan(), "conditional branch code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%sif nuruTruthy(", indent)
+	c.compileExpr(s.Cond)
+	c.emit(")")
+	c.compileStmt(s.Then, indent)
+	if s.Else != nil {
+		c.emit(" else")
+		if _, isIf := s.Else.(*ast.IfStmt); isIf {
+			c.compileStmt(s.Else, "")
+		} else {
+			c.compileStmt(s.Else, indent)
+		}
+	}
+	c.emit("\n")
 }
 
 // compileAssignStmt emits an indented assignment and trailing newline.
-//
-// TASK [GEN-02]: Use c.emit, c.compileExpr, indent, s.Name, and s.Value.
-// See HINT [GEN-02-HINT] at the bottom of this file for details.
 func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
-	c.error(s.GetSpan(), "variable assignment code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%s%s = ", indent, s.Name)
+	c.compileExpr(s.Value)
+	c.emit("\n")
 }
 
 // compileReturnStmt emits a return value, using nil for a bare Nuru return so
 // the generated Go function always satisfies its any result type.
-//
-// TASK [GEN-03]: Use c.emit, c.compileExpr, indent, and s.Value.
-// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileReturnStmt(s *ast.ReturnStmt, indent string) {
-	c.error(s.GetSpan(), "return statement code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%sreturn ", indent)
+	if s.Value != nil {
+		c.compileExpr(s.Value)
+	} else {
+		c.emit("nil")
+	}
+	c.emit("\n")
 }
 
 // compileExpr emits one value-producing expression using runtime helpers where
@@ -230,19 +246,20 @@ func (c *Compiler) compileExpr(expr ast.Expr) {
 }
 
 // compileIdentExpr emits the identifier spelling stored in the AST.
-//
-// TASK [GEN-02]: Use c.emit and e.Name.
-// See HINT [GEN-02-HINT] at the bottom of this file for details.
 func (c *Compiler) compileIdentExpr(e *ast.IdentExpr) {
-	c.error(e.GetSpan(), "identifier code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%s", e.Name)
 }
 
 // compileCallExpr emits a named callee and comma-separated argument expressions.
-//
-// TASK [GEN-03]: Use c.emit, c.compileExpr, e.Callee, and e.Args.
-// See HINT [GEN-03-HINT] at the bottom of this file for details.
 func (c *Compiler) compileCallExpr(e *ast.CallExpr) {
-	c.error(e.GetSpan(), "function call code generation is not implemented in Stage 0/1/2/3")
+	c.emit("%s(", e.Callee)
+	for index, argument := range e.Args {
+		if index > 0 {
+			c.emit(", ")
+		}
+		c.compileExpr(argument)
+	}
+	c.emit(")")
 }
 
 // emit appends formatted Go source to the compiler buffer.
