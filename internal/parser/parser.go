@@ -1,6 +1,6 @@
 /*
 ===============================================================================
-QUEST STAGE 2: THE STRUCTURAL WEAVER (Parser)
+QUEST STAGE 2: THE STRUCTURAL WEAVER (Parser) [COMPLETED]
 ===============================================================================
 Overview:
   The parser sits between the lexer and both execution backends. It consumes the
@@ -12,10 +12,10 @@ Overview:
   construction for branches, variables, functions, calls, returns, and names.
 
 Tasks in this file:
-  - TASK [PARSE-01]: Build if, else-if, and else statement trees.
-  - TASK [PARSE-02]: Build variable declarations and assignments.
-  - TASK [PARSE-03]: Build function declarations, calls, and returns.
-  - TASK [PARSE-04]: Build identifier lookup expressions.
+  - [COMPLETED] TASK [PARSE-01]: Build if, else-if, and else statement trees.
+  - [COMPLETED] TASK [PARSE-02]: Build variable declarations and assignments.
+  - [COMPLETED] TASK [PARSE-03]: Build function declarations, calls, and returns.
+  - [COMPLETED] TASK [PARSE-04]: Build identifier lookup expressions.
 
 Commands:
   - Run tests:  go test ./internal/parser
@@ -69,7 +69,7 @@ func (p *Parser) program() *ast.Program {
 	prog := &ast.Program{Base: ast.Base{Span: start}}
 
 	for !p.atEnd() {
-		if p.check(token.Kind("func")) {
+		if p.check(token.Func) {
 			d := p.declaration()
 			if d != nil {
 				prog.Decls = append(prog.Decls, d)
@@ -90,7 +90,7 @@ func (p *Parser) program() *ast.Program {
 
 // declaration dispatches a top-level declaration from the next token.
 func (p *Parser) declaration() ast.Decl {
-	if p.check(token.Kind("func")) {
+	if p.check(token.Func) {
 		return p.parseFuncDecl()
 	}
 	p.error("expected declaration")
@@ -100,21 +100,37 @@ func (p *Parser) declaration() ast.Decl {
 
 // parseFuncDecl parses a named top-level function, its parameters, and body.
 // The returned span starts at func and ends after the closing body brace.
-//
-// TASK [PARSE-03]: Build an ast.FuncDecl for func name(params) { body }.
-// Use token.Func, token.Ident, token.LParen, token.RParen, token.Comma,
-// token.LBrace, consume, check, match, parseBlockStmt, and mergeSpan.
-// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseFuncDecl() ast.Decl {
-	p.error("function declarations ('func') are not implemented yet in Stage 0/1")
-	p.advance()
-	return nil
+	start := p.consume(token.Func, "expected 'func'")
+	name := p.consume(token.Ident, "expected function name")
+	p.consume(token.LParen, "expected '(' after function name")
+
+	var params []string
+	if !p.check(token.RParen) {
+		for {
+			param := p.consume(token.Ident, "expected parameter name")
+			params = append(params, param.Lexeme)
+			if !p.match(token.Comma) {
+				break
+			}
+		}
+	}
+	p.consume(token.RParen, "expected ')' after parameters")
+	p.consume(token.LBrace, "expected '{' before function body")
+	body := p.parseBlockStmt()
+
+	return &ast.FuncDecl{
+		Base:   ast.Base{Span: mergeSpan(start.Span, body.GetSpan())},
+		Name:   name.Lexeme,
+		Params: params,
+		Body:   body,
+	}
 }
 
 // statement dispatches the next statement form. Rules that need their leading
 // token for a source span consume that token inside their own parser.
 func (p *Parser) statement() ast.Stmt {
-	if p.check(token.Kind("var")) {
+	if p.check(token.Var) {
 		return p.parseVarDecl()
 	}
 	if p.check(token.If) {
@@ -156,56 +172,90 @@ func (p *Parser) statement() ast.Stmt {
 
 // parseVarDecl parses var name = initializer with an optional trailing semicolon.
 // Its span covers the var keyword through the initializer.
-//
-// TASK [PARSE-02]: Build an ast.VarDecl for var name = expression.
-// Use token.Var, token.Ident, token.Assign, consume, expression, match,
-// token.Semicolon, and mergeSpan.
-// See HINT [PARSE-02-HINT] at the bottom of this file for details.
 func (p *Parser) parseVarDecl() *ast.VarDecl {
-	p.error("variable declarations ('var') are not implemented yet in Stage 0/1")
-	p.advance()
-	return nil
+	start := p.consume(token.Var, "expected 'var'")
+	name := p.consume(token.Ident, "expected variable name after 'var'")
+	p.consume(token.Assign, "expected '=' after variable name")
+	init := p.expression()
+	p.match(token.Semicolon)
+
+	span := start.Span
+	if init != nil {
+		span = mergeSpan(start.Span, init.GetSpan())
+	}
+	return &ast.VarDecl{
+		Base: ast.Base{Span: span},
+		Name: name.Lexeme,
+		Init: init,
+	}
 }
 
 // parseIfStmt parses an if condition and required block plus an optional else
 // block or recursively parsed else-if. Its span includes the leading if keyword
 // and the final branch.
-//
-// TASK [PARSE-01]: Build an ast.IfStmt for if, else-if, and else branches.
-// Use token.If, token.Else, token.LBrace, consume, expression, parseBlockStmt,
-// check, match, mergeSpan, and recursive parseIfStmt calls.
-// See HINT [PARSE-01-HINT] at the bottom of this file for details.
 func (p *Parser) parseIfStmt() ast.Stmt {
-	p.error("conditional branch statements ('if') are not implemented yet in Stage 0/1")
-	p.advance()
-	return nil
+	start := p.consume(token.If, "expected 'if'")
+	cond := p.expression()
+	p.consume(token.LBrace, "expected '{' after if condition")
+	thenBranch := p.parseBlockStmt()
+
+	var elseBranch ast.Stmt
+	if p.match(token.Else) {
+		if p.check(token.If) {
+			elseBranch = p.parseIfStmt()
+		} else if p.match(token.LBrace) {
+			elseBranch = p.parseBlockStmt()
+		} else {
+			p.error("expected '{' or 'if' after 'else'")
+		}
+	}
+
+	span := mergeSpan(start.Span, thenBranch.GetSpan())
+	if elseBranch != nil {
+		span = mergeSpan(start.Span, elseBranch.GetSpan())
+	}
+	return &ast.IfStmt{
+		Base: ast.Base{Span: span},
+		Cond: cond,
+		Then: thenBranch,
+		Else: elseBranch,
+	}
 }
 
 // parseAssignStmt parses name = value with an optional trailing semicolon. Its
 // span covers the assigned identifier through the value expression.
-//
-// TASK [PARSE-02]: Build an ast.AssignStmt for name = expression.
-// Use token.Ident, token.Assign, consume, expression, match, token.Semicolon,
-// and mergeSpan.
-// See HINT [PARSE-02-HINT] at the bottom of this file for details.
 func (p *Parser) parseAssignStmt() ast.Stmt {
-	p.error("variable assignments are not implemented yet in Stage 0/1")
-	p.advance()
-	p.advance()
-	return nil
+	name := p.consume(token.Ident, "expected variable name")
+	p.consume(token.Assign, "expected '='")
+	value := p.expression()
+	p.match(token.Semicolon)
+
+	span := name.Span
+	if value != nil {
+		span = mergeSpan(name.Span, value.GetSpan())
+	}
+	return &ast.AssignStmt{
+		Base:  ast.Base{Span: span},
+		Name:  name.Lexeme,
+		Value: value,
+	}
 }
 
 // parseReturnStmt parses return with an optional value and semicolon. Return is
 // currently recognized by its identifier lexeme rather than a dedicated kind.
-//
-// TASK [PARSE-03]: Build an ast.ReturnStmt and preserve bare returns.
-// Use advance, check, atEnd, expression, match, token.RBrace, token.Semicolon,
-// and mergeSpan.
-// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseReturnStmt() ast.Stmt {
-	p.error("return statements are not implemented yet in Stage 0/1")
-	p.advance()
-	return nil
+	start := p.advance()
+	var value ast.Expr
+	if !p.check(token.RBrace) && !p.check(token.Semicolon) && !p.atEnd() {
+		value = p.expression()
+	}
+	p.match(token.Semicolon)
+
+	span := start.Span
+	if value != nil {
+		span = mergeSpan(start.Span, value.GetSpan())
+	}
+	return &ast.ReturnStmt{Base: ast.Base{Span: span}, Value: value}
 }
 
 // parsePrintStmt parses the built-in print call as a dedicated statement node.
@@ -365,29 +415,37 @@ func (p *Parser) primary() ast.Expr {
 
 // parseIdentExpr consumes a name and preserves its spelling and source span in
 // an ast.IdentExpr.
-//
-// TASK [PARSE-04]: Build an ast.IdentExpr for the next identifier.
-// Use token.Ident and consume.
-// See HINT [PARSE-04-HINT] at the bottom of this file for details.
 func (p *Parser) parseIdentExpr() ast.Expr {
-	tok := p.advance()
-	p.error(fmt.Sprintf("identifier expressions ('%s') are not implemented yet in Stage 0/1", tok.Lexeme))
-	return nil
+	tok := p.consume(token.Ident, "expected identifier")
+	return &ast.IdentExpr{
+		Base: ast.Base{Span: tok.Span},
+		Name: tok.Lexeme,
+	}
 }
 
 // parseCallExpr parses a named callee and zero or more comma-separated
 // arguments, preserving the span through the closing parenthesis.
-//
-// TASK [PARSE-03]: Build an ast.CallExpr for name(arguments).
-// Use token.Ident, token.LParen, token.RParen, token.Comma, consume, check,
-// expression, match, and mergeSpan.
-// See HINT [PARSE-03-HINT] at the bottom of this file for details.
 func (p *Parser) parseCallExpr() ast.Expr {
-	tok := p.advance()
-	p.error(fmt.Sprintf("function calls ('%s(...)') are not implemented yet in Stage 0/1", tok.Lexeme))
-	p.consume(token.LParen, "")
-	p.consume(token.RParen, "")
-	return nil
+	callee := p.consume(token.Ident, "expected function name")
+	p.consume(token.LParen, "expected '('")
+
+	var args []ast.Expr
+	if !p.check(token.RParen) {
+		for {
+			if arg := p.expression(); arg != nil {
+				args = append(args, arg)
+			}
+			if !p.match(token.Comma) {
+				break
+			}
+		}
+	}
+	end := p.consume(token.RParen, "expected ')' after arguments")
+	return &ast.CallExpr{
+		Base:   ast.Base{Span: mergeSpan(callee.Span, end.Span)},
+		Callee: callee.Lexeme,
+		Args:   args,
+	}
 }
 
 // atEnd reports whether the next token is EOF.
