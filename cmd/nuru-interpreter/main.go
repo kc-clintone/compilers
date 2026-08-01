@@ -11,6 +11,7 @@ import (
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt)
+
 	defer stop()
 	os.Exit(cli.RunInterpreter(ctx, os.Args[1:], cli.Streams{Stdout: os.Stdout, Stderr: os.Stderr, Stdin: os.Stdin}))
 }

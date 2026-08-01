@@ -125,17 +125,23 @@ func TestRuntimeFailuresAgree(t *testing.T) {
 	for name, source := range tests {
 		t.Run(name, func(t *testing.T) {
 			program, diagnostics := parser.Parse("runtime.nuru", []byte(source))
+
 			if len(diagnostics) != 0 {
 				t.Fatalf("parse: %v", diagnostics)
 			}
+
 			info, diagnostics := checker.Check(program)
+
 			if len(diagnostics) != 0 {
 				t.Fatalf("check: %v", diagnostics)
 			}
+
 			ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+
 			defer cancel()
 			var interpreted bytes.Buffer
 			interpretedErr := interpreter.Run(ctx, program, info, interpreter.Options{Stdout: &interpreted})
+
 			if interpretedErr == nil {
 				t.Fatal("interpreter unexpectedly succeeded")
 			}
@@ -144,15 +150,21 @@ func TestRuntimeFailuresAgree(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
+
 			binary := filepath.Join(t.TempDir(), "program")
+
 			if err := compiler.Build(ctx, goSource, binary); err != nil {
 				t.Fatalf("build: %v\n%s", err, goSource)
 			}
+
 			compiledOutput, compiledErr := exec.CommandContext(ctx, binary).CombinedOutput()
+
 			if compiledErr == nil {
 				t.Fatalf("compiled program unexpectedly succeeded: %q", compiledOutput)
 			}
+
 			want := interpreted.String() + interpretedErr.Error() + "\n"
+
 			if string(compiledOutput) != want {
 				t.Fatalf("observable failure differs\ninterpreter: %q\ncompiled:    %q", want, compiledOutput)
 			}
@@ -166,22 +178,29 @@ func TestSourceAnalyzerFallbackIsCurrent(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	program, diagnostics := parser.Parse("examples/source-analyzer.nuru", source)
+
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse: %v", diagnostics)
 	}
+
 	info, diagnostics := checker.Check(program)
+
 	if len(diagnostics) != 0 {
 		t.Fatalf("check: %v", diagnostics)
 	}
+
 	generated, err := compiler.Generate(program, info)
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	fallback, err := os.ReadFile(filepath.Join(root, "generated", "source-analyzer.go"))
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if !bytes.Equal(generated, fallback) {
 		t.Fatal("checked-in source analyzer fallback is stale; regenerate it with nuru-compiler")
 	}

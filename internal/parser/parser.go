@@ -28,6 +28,7 @@ func Parse(filename string, input []byte) (*ast.Program, []diagnostic.Diagnostic
 
 	p := &Parser{tokens: toks, allowNamedComposite: true}
 	program := p.program()
+
 	ast.AssignNodeIDs(program)
 
 	if len(p.diags) > 0 {
@@ -71,28 +72,35 @@ func (p *Parser) program() *ast.Program {
 	out.Span = merge(start, p.previous().Span)
 	return out
 }
+
 func (p *Parser) isDeclStart() bool {
 	return p.check(token.Type) || p.check(token.Func) || p.check(token.Var) || p.check(token.Export) || p.check(token.Import)
 }
+
 func (p *Parser) declaration() ast.Decl {
 	if p.match(token.Export) {
 		start := p.previous()
 		var target ast.Node
+
 		if p.isDeclStart() {
 			target = p.declaration()
 		} else {
 			target = p.statement()
 		}
+
 		span := start.Span
+
 		if target != nil {
 			span = merge(start.Span, target.GetSpan())
 		}
+
 		return &ast.ExportStmt{Base: ast.Base{Span: span}, Target: target}
 	}
 
 	if p.match(token.Import) {
 		start := p.previous()
 		var path string
+
 		if p.match(token.String) {
 			path = p.previous().Literal.(string)
 		} else if p.match(token.Ident) {
@@ -100,7 +108,9 @@ func (p *Parser) declaration() ast.Decl {
 		} else {
 			p.err(p.peek(), "expected module path or identifier after import")
 		}
+
 		end := p.consume(token.Semicolon, "expected ';' after import statement")
+
 		return &ast.ImportStmt{Base: ast.Base{Span: merge(start.Span, end.Span)}, Path: path}
 	}
 
@@ -121,6 +131,7 @@ func (p *Parser) declaration() ast.Decl {
 
 	return nil
 }
+
 func (p *Parser) structDecl() ast.Decl {
 	start := p.previous()
 	name := p.consume(token.Ident, "expected type name")
@@ -142,6 +153,7 @@ func (p *Parser) structDecl() ast.Decl {
 	d.Span = merge(start.Span, end.Span)
 	return d
 }
+
 func (p *Parser) funcDecl() ast.Decl {
 	start := p.previous()
 	name := p.consume(token.Ident, "expected function name")
@@ -174,6 +186,7 @@ func (p *Parser) funcDecl() ast.Decl {
 	d.Span = merge(start.Span, body.Span)
 	return d
 }
+
 func (p *Parser) varDecl(start token.Token) *ast.VarDecl {
 	name := p.consume(token.Ident, "expected variable name")
 	t := p.parseType()
@@ -224,6 +237,7 @@ func (p *Parser) parseType() *ast.TypeRef {
 	t.Span = merge(start.Span, p.previous().Span)
 	return t
 }
+
 func (p *Parser) typeStart() bool {
 	return p.check(token.IntType) || p.check(token.CharType) || p.check(token.StringType) || p.check(token.BoolType) || p.check(token.LBracket) || p.check(token.Map) || p.check(token.Ident)
 }
@@ -232,21 +246,26 @@ func (p *Parser) statement() ast.Stmt {
 	if p.match(token.Export) {
 		start := p.previous()
 		var target ast.Node
+
 		if p.isDeclStart() {
 			target = p.declaration()
 		} else {
 			target = p.statement()
 		}
+
 		span := start.Span
+
 		if target != nil {
 			span = merge(start.Span, target.GetSpan())
 		}
+
 		return &ast.ExportStmt{Base: ast.Base{Span: span}, Target: target}
 	}
 
 	if p.match(token.Import) {
 		start := p.previous()
 		var path string
+
 		if p.match(token.String) {
 			path = p.previous().Literal.(string)
 		} else if p.match(token.Ident) {
@@ -254,7 +273,9 @@ func (p *Parser) statement() ast.Stmt {
 		} else {
 			p.err(p.peek(), "expected module path or identifier after import")
 		}
+
 		end := p.consume(token.Semicolon, "expected ';' after import statement")
+
 		return &ast.ImportStmt{Base: ast.Base{Span: merge(start.Span, end.Span)}, Path: path}
 	}
 
@@ -319,6 +340,7 @@ func (p *Parser) statement() ast.Stmt {
 	s.Span = merge(start.Span, end.Span)
 	return s
 }
+
 func (p *Parser) block() *ast.BlockStmt {
 	start := p.consume(token.LBrace, "expected '{'")
 	b := &ast.BlockStmt{}
@@ -337,6 +359,7 @@ func (p *Parser) block() *ast.BlockStmt {
 	b.Span = merge(start.Span, end.Span)
 	return b
 }
+
 func (p *Parser) ifStmt() ast.Stmt {
 	start := p.previous()
 	cond := p.conditionExpression()
@@ -356,6 +379,7 @@ func (p *Parser) ifStmt() ast.Stmt {
 	s.Span = merge(start.Span, lastStmtSpan(then, other))
 	return s
 }
+
 func (p *Parser) switchStmt() ast.Stmt {
 	start := p.previous()
 	subject := p.conditionExpression()
@@ -392,6 +416,7 @@ func (p *Parser) switchStmt() ast.Stmt {
 	s.Span = merge(start.Span, end.Span)
 	return s
 }
+
 func (p *Parser) forStmt() ast.Stmt {
 	start := p.previous()
 	f := &ast.ForStmt{}
@@ -417,6 +442,7 @@ func (p *Parser) forStmt() ast.Stmt {
 	f.Span = merge(start.Span, f.Body.Span)
 	return f
 }
+
 func (p *Parser) returnStmt() ast.Stmt {
 	start := p.previous()
 	var v ast.Expr
@@ -473,6 +499,7 @@ func (p *Parser) logicalOr() ast.Expr {
 		op := p.previous()
 		right := p.logicalAnd()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -489,6 +516,7 @@ func (p *Parser) logicalAnd() ast.Expr {
 		op := p.previous()
 		right := p.equality()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -505,6 +533,7 @@ func (p *Parser) equality() ast.Expr {
 		op := p.previous()
 		right := p.comparison()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -521,6 +550,7 @@ func (p *Parser) comparison() ast.Expr {
 		op := p.previous()
 		right := p.term()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -537,6 +567,7 @@ func (p *Parser) term() ast.Expr {
 		op := p.previous()
 		right := p.factor()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -553,6 +584,7 @@ func (p *Parser) factor() ast.Expr {
 		op := p.previous()
 		right := p.unary()
 		b := &ast.BinaryExpr{Left: left, Op: op.Lexeme, Right: right}
+
 		b.Span = merge(left.GetSpan(), right.GetSpan())
 		left = b
 	}
@@ -572,6 +604,7 @@ func (p *Parser) unary() ast.Expr {
 
 	return p.postfix()
 }
+
 func (p *Parser) postfix() ast.Expr {
 	e := p.primary()
 
@@ -655,6 +688,7 @@ func (p *Parser) postfix() ast.Expr {
 
 	return e
 }
+
 func (p *Parser) primary() ast.Expr {
 	t := p.advance()
 
@@ -725,6 +759,7 @@ func (p *Parser) primary() ast.Expr {
 		return x
 	}
 }
+
 func (p *Parser) composite(typ *ast.TypeRef) ast.Expr {
 	start := typ.Span
 
@@ -761,6 +796,7 @@ func (p *Parser) composite(typ *ast.TypeRef) ast.Expr {
 	c.Span = merge(start, end.Span)
 	return c
 }
+
 func literal(t token.Token, v any, k ast.TypeKind) ast.Expr {
 	x := &ast.LiteralExpr{Value: v, Type: k}
 
@@ -778,6 +814,7 @@ func (p *Parser) peekN(n int) token.Token {
 
 	return p.tokens[i]
 }
+
 func (p *Parser) previous() token.Token {
 	if p.current == 0 {
 		return p.tokens[0]
@@ -804,6 +841,7 @@ func (p *Parser) match(ks ...token.Kind) bool {
 
 	return false
 }
+
 func (p *Parser) consume(k token.Kind, msg string) token.Token {
 	if p.check(k) {
 		return p.advance()
@@ -812,9 +850,11 @@ func (p *Parser) consume(k token.Kind, msg string) token.Token {
 	p.err(p.peek(), msg)
 	return p.peek()
 }
+
 func (p *Parser) err(t token.Token, msg string) {
 	p.diags = append(p.diags, diagnostic.Diagnostic{Span: t.Span, Phase: "parser", Message: msg})
 }
+
 func (p *Parser) sync() {
 	for !p.atEnd() {
 		if p.previous().Kind == token.Semicolon {
@@ -829,6 +869,7 @@ func (p *Parser) sync() {
 		p.advance()
 	}
 }
+
 func merge(a, b source.Span) source.Span {
 	if a.Filename == "" {
 		return b
@@ -840,6 +881,7 @@ func merge(a, b source.Span) source.Span {
 
 	return source.Span{Filename: a.Filename, Start: a.Start, End: b.End}
 }
+
 func lastSpan(t *ast.TypeRef, e ast.Expr) source.Span {
 	if e != nil {
 		return e.GetSpan()
@@ -847,6 +889,7 @@ func lastSpan(t *ast.TypeRef, e ast.Expr) source.Span {
 
 	return t.Span
 }
+
 func lastStmtSpan(a, b ast.Stmt) source.Span {
 	if b != nil {
 		return b.GetSpan()

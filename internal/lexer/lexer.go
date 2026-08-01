@@ -49,6 +49,7 @@ func (s *Lexer) peek() byte {
 
 	return s.src[s.current]
 }
+
 func (s *Lexer) peekNext() byte {
 	if s.current+1 >= len(s.src) {
 		return 0
@@ -56,6 +57,7 @@ func (s *Lexer) peekNext() byte {
 
 	return s.src[s.current+1]
 }
+
 func (s *Lexer) advance() byte {
 	c := s.src[s.current]
 
@@ -69,6 +71,7 @@ func (s *Lexer) advance() byte {
 
 	return c
 }
+
 func (s *Lexer) match(want byte) bool {
 	if s.atEnd() || s.peek() != want {
 		return false
@@ -77,12 +80,15 @@ func (s *Lexer) match(want byte) bool {
 	s.advance()
 	return true
 }
+
 func (s *Lexer) span() source.Span {
 	return source.Span{Filename: s.filename, Start: s.startPos, End: s.pos()}
 }
+
 func (s *Lexer) add(k token.Kind, lit any) {
 	s.tokens = append(s.tokens, token.Token{Kind: k, Lexeme: string(s.src[s.start:s.current]), Literal: lit, Span: s.span()})
 }
+
 func (s *Lexer) error(msg string) {
 	s.diags = append(s.diags, diagnostic.Diagnostic{Span: s.span(), Phase: "lexer", Message: msg})
 }
@@ -195,6 +201,7 @@ func (s *Lexer) blockComment() {
 
 	s.error("unterminated block comment")
 }
+
 func (s *Lexer) number() {
 	for isDigit(s.peek()) {
 		s.advance()
@@ -209,6 +216,7 @@ func (s *Lexer) number() {
 
 	s.add(token.Integer, int(n))
 }
+
 func (s *Lexer) identifier() {
 	for isIdentPart(s.peek()) {
 		s.advance()
@@ -229,6 +237,7 @@ func (s *Lexer) identifier() {
 		s.add(token.Ident, raw)
 	}
 }
+
 func (s *Lexer) quoted(quote byte, k token.Kind) {
 	var out []byte
 
@@ -278,6 +287,7 @@ func (s *Lexer) quoted(quote byte, k token.Kind) {
 		s.add(k, string(out))
 	}
 }
+
 func (s *Lexer) recoverQuoted(quote byte) {
 	for !s.atEnd() && s.peek() != '\n' {
 		if s.advance() == quote {

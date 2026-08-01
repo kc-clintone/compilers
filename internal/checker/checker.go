@@ -149,6 +149,7 @@ func (i *Info) TypeOf(e ast.Expr) Type {
 // SymbolOf returns the symbol resolved for an identifier expression.
 func (i *Info) SymbolOf(e *ast.IdentExpr) (*Symbol, bool) {
 	symbol, ok := i.symbols[e.GetID()]
+
 	return symbol, ok
 }
 
@@ -156,18 +157,21 @@ func (i *Info) SymbolOf(e *ast.IdentExpr) (*Symbol, bool) {
 // constructor node.
 func (i *Info) StructOf(node ast.Node) (*Struct, bool) {
 	structure, ok := i.structsAt[node.GetID()]
+
 	return structure, ok
 }
 
 // BuiltinOf returns the built-in operation selected for call.
 func (i *Info) BuiltinOf(call *ast.CallExpr) (Builtin, bool) {
 	builtin, ok := i.builtins[call.GetID()]
+
 	return builtin, ok
 }
 
 // GlobalType returns the declared type of a global variable.
 func (i *Info) GlobalType(name string) (Type, bool) {
 	t, ok := i.globals[name]
+
 	return t, ok
 }
 
@@ -177,6 +181,7 @@ func (i *Info) TypeOfRef(ref *ast.TypeRef) Type {
 	if ref == nil {
 		return Void
 	}
+
 	switch ref.Kind {
 	case ast.TypeInt:
 		return Int
@@ -190,9 +195,11 @@ func (i *Info) TypeOfRef(ref *ast.TypeRef) Type {
 		return Type{Kind: ast.TypeNamed, Name: ref.Name}
 	case ast.TypeSlice:
 		element := i.TypeOfRef(ref.Elem)
+
 		return Type{Kind: ast.TypeSlice, Elem: &element}
 	case ast.TypeMap:
 		key, element := i.TypeOfRef(ref.Key), i.TypeOfRef(ref.Elem)
+
 		return Type{Kind: ast.TypeMap, Key: &key, Elem: &element}
 	default:
 		return Invalid
@@ -213,8 +220,10 @@ func (s *scope) get(n string) (*Symbol, bool) {
 
 	return nil, false
 }
+
 func (s *scope) put(symbol *Symbol) bool {
 	n := symbol.Name
+
 	if _, ok := s.values[n]; ok {
 		return false
 	}
@@ -255,6 +264,7 @@ func unwrapDecl(d ast.Decl) ast.Decl {
 			return unwrapDecl(inner)
 		}
 	}
+
 	return d
 }
 
@@ -264,6 +274,7 @@ func (c *Checker) declare(p *ast.Program) {
 			if s.Name == "main" {
 				c.err(s, "reserved name main")
 			}
+
 			if _, exists := c.info.structs[s.Name]; exists {
 				c.err(s, "duplicate type "+s.Name)
 			} else {
@@ -277,12 +288,15 @@ func (c *Checker) declare(p *ast.Program) {
 			if x.Name == "main" {
 				c.err(x, "reserved name main")
 			}
+
 			if builtin(x.Name) {
 				c.err(x, "reserved built-in name "+x.Name)
 			}
+
 			t := c.resolveType(x.Type)
 
 			symbol := &Symbol{Kind: SymbolVariable, Name: x.Name, Type: t, Decl: x}
+
 			if !c.scope.put(symbol) {
 				c.err(x, "duplicate global "+x.Name)
 			} else {
@@ -297,10 +311,12 @@ func (c *Checker) declare(p *ast.Program) {
 				c.err(x, "reserved name main")
 				continue
 			}
+
 			if builtin(x.Name) {
 				c.err(x, "reserved built-in name "+x.Name)
 				continue
 			}
+
 			if _, exists := c.scope.get(x.Name); exists {
 				c.err(x, "duplicate value name "+x.Name)
 				continue
@@ -327,6 +343,7 @@ func (c *Checker) declare(p *ast.Program) {
 		}
 	}
 }
+
 func (c *Checker) defineStructs(p *ast.Program) {
 	for _, d := range p.Decls {
 		if x, ok := unwrapDecl(d).(*ast.StructDecl); ok {
@@ -336,6 +353,7 @@ func (c *Checker) defineStructs(p *ast.Program) {
 				if f.Name == "main" {
 					c.errSpan(f.Span, "reserved name main")
 				}
+
 				if _, exists := s.fields[f.Name]; exists {
 					c.errSpan(f.Span, "duplicate field "+f.Name)
 				} else {
@@ -345,6 +363,7 @@ func (c *Checker) defineStructs(p *ast.Program) {
 		}
 	}
 }
+
 func (c *Checker) checkProgram(p *ast.Program) {
 	for _, d := range p.Decls {
 		switch x := unwrapDecl(d).(type) {
@@ -365,6 +384,7 @@ func (c *Checker) checkProgram(p *ast.Program) {
 		c.stmt(s)
 	}
 }
+
 func (c *Checker) checkFunc(d *ast.FuncDecl) {
 	f := c.info.functions[d.Name]
 
@@ -380,7 +400,9 @@ func (c *Checker) checkFunc(d *ast.FuncDecl) {
 		if p.Name == "main" || builtin(p.Name) {
 			c.errSpan(p.Span, "reserved name "+p.Name)
 		}
+
 		symbol := &Symbol{Kind: SymbolParameter, Name: p.Name, Type: f.Params[i]}
+
 		if !c.scope.put(symbol) {
 			c.errSpan(p.Span, "duplicate parameter "+p.Name)
 		}
@@ -398,6 +420,7 @@ func (c *Checker) stmt(s ast.Stmt) {
 	switch x := s.(type) {
 	case *ast.VarDecl:
 		t := c.resolveType(x.Type)
+
 		if x.Name == "main" || builtin(x.Name) {
 			c.err(x, "reserved name "+x.Name)
 		}
@@ -446,6 +469,7 @@ func (c *Checker) stmt(s ast.Stmt) {
 					if seenCases[key] {
 						c.err(v, "duplicate switch case")
 					}
+
 					seenCases[key] = true
 				}
 			}
@@ -502,6 +526,7 @@ func (c *Checker) stmt(s ast.Stmt) {
 		if targetStmt, ok := x.Target.(ast.Stmt); ok {
 			c.stmt(targetStmt)
 		}
+
 		if varDecl, ok := x.Target.(*ast.VarDecl); ok {
 			if sym, ok := c.scope.values[varDecl.Name]; ok && c.scope.parent != nil {
 				c.scope.parent.put(sym)
@@ -542,6 +567,7 @@ func (c *Checker) expr(e ast.Expr) Type {
 		var ok bool
 
 		symbol, ok := c.scope.get(x.Name)
+
 		if !ok {
 			c.err(x, "unknown variable "+x.Name)
 			t = Invalid
@@ -636,6 +662,7 @@ func (c *Checker) expr(e ast.Expr) Type {
 	c.info.exprTypes[e.GetID()] = t
 	return t
 }
+
 func (c *Checker) binary(x *ast.BinaryExpr) Type {
 	l, r := c.expr(x.Left), c.expr(x.Right)
 
@@ -670,6 +697,7 @@ func (c *Checker) binary(x *ast.BinaryExpr) Type {
 	c.err(x, "operator "+x.Op+" does not accept "+l.String())
 	return Invalid
 }
+
 func (c *Checker) call(x *ast.CallExpr) Type {
 	if f := c.info.functions[x.Callee]; f != nil {
 		if len(x.Args) != len(f.Params) {
@@ -686,6 +714,7 @@ func (c *Checker) call(x *ast.CallExpr) Type {
 
 		return f.Result
 	}
+
 	if id := builtinID(x.Callee); id != BuiltinNone {
 		c.info.builtins[x.GetID()] = id
 	}
@@ -778,15 +807,18 @@ func (c *Checker) call(x *ast.CallExpr) Type {
 
 	return Invalid
 }
+
 func (c *Checker) composite(x *ast.CompositeExpr) Type {
 	t := c.resolveType(x.Type)
 
 	switch t.Kind {
 	case ast.TypeNamed:
 		s := c.info.structs[t.Name]
+
 		if s == nil {
 			return Invalid
 		}
+
 		c.info.structsAt[x.GetID()] = s
 		seen := map[string]bool{}
 
@@ -835,6 +867,7 @@ func (c *Checker) composite(x *ast.CompositeExpr) Type {
 
 	return t
 }
+
 func (c *Checker) lvalue(e ast.Expr) Type {
 	switch e.(type) {
 	case *ast.IdentExpr, *ast.FieldExpr, *ast.IndexExpr:
@@ -873,10 +906,12 @@ func (c *Checker) resolveType(r *ast.TypeRef) Type {
 		return Type{Kind: ast.TypeMap, Key: &k, Elem: &e}
 	case ast.TypeNamed:
 		structure, ok := c.info.structs[r.Name]
+
 		if !ok {
 			c.err(r, "unknown type "+r.Name)
 			return Invalid
 		}
+
 		c.info.structsAt[r.GetID()] = structure
 
 		return Type{Kind: ast.TypeNamed, Name: r.Name}
@@ -887,6 +922,7 @@ func (c *Checker) resolveType(r *ast.TypeRef) Type {
 
 func literalKey(expr ast.Expr) (string, bool) {
 	literal, ok := expr.(*ast.LiteralExpr)
+
 	if !ok {
 		return "", false
 	}
@@ -926,6 +962,7 @@ func (c *Checker) require(got, want Type, n ast.Node, what string) {
 		c.err(n, what+" has type "+got.String()+", want "+want.String())
 	}
 }
+
 func (c *Checker) args(x *ast.CallExpr, wants ...Type) {
 	if len(x.Args) != len(wants) {
 		c.arity(x, len(wants))
@@ -939,6 +976,7 @@ func (c *Checker) args(x *ast.CallExpr, wants ...Type) {
 		}
 	}
 }
+
 func (c *Checker) arity(x *ast.CallExpr, n int) {
 	if len(x.Args) != n {
 		c.err(x, fmt.Sprintf("%s expects %d arguments", x.Callee, n))
@@ -948,6 +986,7 @@ func (c *Checker) err(n ast.Node, msg string) { c.errSpan(n.GetSpan(), msg) }
 func (c *Checker) errSpan(s source.Span, msg string) {
 	c.diags = append(c.diags, diagnostic.Diagnostic{Span: s, Phase: "checker", Message: msg})
 }
+
 func builtin(s string) bool {
 	switch s {
 	case "print", "args", "readFile", "writeFile", "len", "append", "int", "char", "string", "fail":
@@ -956,6 +995,7 @@ func builtin(s string) bool {
 
 	return false
 }
+
 func guaranteesReturn(b *ast.BlockStmt) bool {
 	for _, s := range b.Stmts {
 		switch x := s.(type) {
@@ -982,6 +1022,7 @@ func guaranteesReturn(b *ast.BlockStmt) bool {
 
 	return false
 }
+
 func guaranteeStmt(s ast.Stmt) bool {
 	switch x := s.(type) {
 	case *ast.BlockStmt:

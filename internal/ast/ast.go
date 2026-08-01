@@ -53,6 +53,7 @@ func AssignNodeIDs(program *Program) {
 	next := NodeID(1)
 	baseType := reflect.TypeFor[Base]()
 	var visit func(reflect.Value)
+
 	visit = func(value reflect.Value) {
 		if !value.IsValid() {
 			return
@@ -62,6 +63,7 @@ func AssignNodeIDs(program *Program) {
 			if value.IsNil() {
 				return
 			}
+
 			visit(value.Elem())
 			return
 		}
@@ -70,6 +72,7 @@ func AssignNodeIDs(program *Program) {
 			if value.IsNil() {
 				return
 			}
+
 			visit(value.Elem())
 			return
 		}
@@ -78,12 +81,15 @@ func AssignNodeIDs(program *Program) {
 		case reflect.Struct:
 			for i := 0; i < value.NumField(); i++ {
 				field := value.Field(i)
+
 				if value.Type().Field(i).Type == baseType {
 					base := field.Addr().Interface().(*Base)
+
 					base.NodeID = next
 					next++
 					continue
 				}
+
 				visit(field)
 			}
 		case reflect.Slice:
@@ -141,12 +147,15 @@ func DebugExpr(expr Expr) string {
 		return "(" + DebugExpr(value.Left) + " " + value.Op + " " + DebugExpr(value.Right) + ")"
 	case *CallExpr:
 		text := value.Callee + "("
+
 		for i, argument := range value.Args {
 			if i > 0 {
 				text += ", "
 			}
+
 			text += DebugExpr(argument)
 		}
+
 		return text + ")"
 	case *FieldExpr:
 		return DebugExpr(value.Object) + "." + value.Name
@@ -154,12 +163,15 @@ func DebugExpr(expr Expr) string {
 		return DebugExpr(value.Object) + "[" + DebugExpr(value.Index) + "]"
 	case *SliceExpr:
 		low, high := "", ""
+
 		if value.Low != nil {
 			low = DebugExpr(value.Low)
 		}
+
 		if value.High != nil {
 			high = DebugExpr(value.High)
 		}
+
 		return DebugExpr(value.Object) + "[" + low + ":" + high + "]"
 	case *MakeExpr:
 		return "make(...)"

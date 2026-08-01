@@ -14,9 +14,11 @@ func TestBaseExposesIdentityAndSpan(t *testing.T) {
 		End:      source.Position{Offset: 8, Line: 2, Column: 7},
 	}
 	base := Base{NodeID: 42, Span: span}
+
 	if base.GetID() != 42 {
 		t.Fatalf("GetID() = %d, want 42", base.GetID())
 	}
+
 	if base.GetSpan() != span {
 		t.Fatalf("GetSpan() = %#v, want %#v", base.GetSpan(), span)
 	}
@@ -36,8 +38,10 @@ func TestAssignNodeIDsUsesDeterministicPreorder(t *testing.T) {
 
 	AssignNodeIDs(program)
 	nodes := []Node{program, declaration, sliceType, integerType, initializer, left, right, statement, call, argument}
+
 	for index, node := range nodes {
 		want := NodeID(index + 1)
+
 		if node.GetID() != want {
 			t.Fatalf("node %d (%T) ID = %d, want %d", index, node, node.GetID(), want)
 		}
@@ -46,6 +50,7 @@ func TestAssignNodeIDsUsesDeterministicPreorder(t *testing.T) {
 	AssignNodeIDs(program)
 	for index, node := range nodes {
 		want := NodeID(index + 1)
+
 		if node.GetID() != want {
 			t.Fatalf("second assignment changed node %T to ID %d, want %d", node, node.GetID(), want)
 		}
@@ -87,6 +92,7 @@ func TestDebugExpr(t *testing.T) {
 func TestAssignNodeIDsPreservesSpans(t *testing.T) {
 	span := source.Span{Filename: "span.nuru", Start: source.Position{Offset: 1, Line: 1, Column: 2}}
 	program := &Program{Base: Base{Span: span}}
+
 	AssignNodeIDs(program)
 	if !reflect.DeepEqual(program.GetSpan(), span) {
 		t.Fatalf("span changed to %#v", program.GetSpan())

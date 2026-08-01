@@ -81,7 +81,7 @@ func Build(ctx context.Context, src []byte, output string) error {
 	defer os.RemoveAll(dir)
 	input := filepath.Join(dir, "main.go")
 
-	if err = os.WriteFile(input, src, 0600); err != nil {
+	if err = os.WriteFile(input, src, 0o600); err != nil {
 		return err
 	}
 
@@ -143,6 +143,7 @@ func (g *generator) decl(d ast.Decl) {
 		// No-op for imports
 	}
 }
+
 func (g *generator) stmt(s ast.Stmt) {
 	switch x := s.(type) {
 	case *ast.VarDecl:
@@ -237,16 +238,19 @@ func (g *generator) stmt(s ast.Stmt) {
 			g.line("for " + g.expr(x.Cond) + " {")
 		} else {
 			initStr, postStr := "", ""
+
 			if x.Init != nil {
 				if v, ok := x.Init.(*ast.VarDecl); ok {
 					initStr = name(v.Name) + " := " + g.expr(v.Init)
 				}
 			}
+
 			if x.Post != nil {
 				if a, ok := x.Post.(*ast.AssignStmt); ok {
 					postStr = g.expr(a.Target) + " = " + g.expr(a.Value)
 				}
 			}
+
 			g.line("for " + initStr + "; " + g.expr(x.Cond) + "; " + postStr + " {")
 		}
 
@@ -277,6 +281,7 @@ func (g *generator) stmt(s ast.Stmt) {
 		// No-op for imports
 	}
 }
+
 func (g *generator) ifInline(x *ast.IfStmt) {
 	g.body.WriteString("if " + g.expr(x.Cond) + " {\n")
 	g.indent++
@@ -327,12 +332,15 @@ func (g *generator) expr(e ast.Expr) string {
 	case *ast.BinaryExpr:
 		if x.Op == "/" || x.Op == "%" {
 			helper := "nuruDiv"
+
 			if x.Op == "%" {
 				helper = "nuruMod"
 			}
+
 			g.helpers["division"] = true
 			return helper + "(" + g.expr(x.Left) + ", " + g.expr(x.Right) + ", " + location(x) + ")"
 		}
+
 		return "(" + g.expr(x.Left) + " " + x.Op + " " + g.expr(x.Right) + ")"
 	case *ast.FieldExpr:
 		return g.expr(x.Object) + "." + name(x.Name)
@@ -359,16 +367,20 @@ func (g *generator) expr(e ast.Expr) string {
 		}
 
 		object := g.expr(x.Object)
+
 		if lo == "" {
 			lo = "0"
 		}
+
 		if hi == "" {
 			hi = "-1"
 		}
+
 		if g.info.TypeOf(x.Object).Kind == ast.TypeString {
 			g.helpers["sliceString"] = true
 			return "nuruSliceString(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
 		}
+
 		g.helpers["sliceSlice"] = true
 		return "nuruSliceSlice(" + object + ", " + lo + ", " + hi + ", " + location(x) + ")"
 	case *ast.MakeExpr:
@@ -376,9 +388,11 @@ func (g *generator) expr(e ast.Expr) string {
 			if x.Size == nil {
 				return "make(" + g.typ(x.Type) + ", 0)"
 			}
+
 			g.helpers["makeSlice"] = true
 			return "nuruMakeSlice[" + g.typ(x.Type.Elem) + "](" + g.expr(x.Size) + ", " + location(x) + ")"
 		}
+
 		return "make(" + g.typ(x.Type) + ")"
 	case *ast.CompositeExpr:
 		var es []string
@@ -406,6 +420,7 @@ func (g *generator) expr(e ast.Expr) string {
 
 	return "/* unsupported */"
 }
+
 func (g *generator) call(x *ast.CallExpr) string {
 	var as []string
 
@@ -416,6 +431,7 @@ func (g *generator) call(x *ast.CallExpr) string {
 	args := strings.Join(as, ", ")
 
 	builtin, _ := g.info.BuiltinOf(x)
+
 	switch builtin {
 	case checker.BuiltinPrint:
 		g.helpers["print"] = true
@@ -461,6 +477,7 @@ func (g *generator) call(x *ast.CallExpr) string {
 
 	return name(x.Callee) + "(" + args + ")"
 }
+
 func (g *generator) typ(t *ast.TypeRef) string {
 	switch t.Kind {
 	case ast.TypeInt:
@@ -551,26 +568,32 @@ func (g *generator) emitHelpers() {
 		g.line("")
 		g.line("func nuruIndexSlice[T any](value []T, index int, location string) T { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; return value[index] }")
 	}
+
 	if g.helpers["indexString"] {
 		g.line("")
 		g.line("func nuruIndexString(value string, index int, location string) byte { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; return value[index] }")
 	}
+
 	if g.helpers["sliceSlice"] {
 		g.line("")
 		g.line("func nuruSliceSlice[T any](value []T, low, high int, location string) []T { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { nuruFail(location, \"slice bounds out of range\") }; return value[low:high] }")
 	}
+
 	if g.helpers["sliceString"] {
 		g.line("")
 		g.line("func nuruSliceString(value string, low, high int, location string) string { if high < 0 { high = len(value) }; if low < 0 || high < low || high > len(value) { nuruFail(location, \"slice bounds out of range\") }; return value[low:high] }")
 	}
+
 	if g.helpers["setSlice"] {
 		g.line("")
 		g.line("func nuruSetSlice[T any](value []T, index int, item T, location string) { if index < 0 || index >= len(value) { nuruFail(location, \"index out of bounds\") }; value[index] = item }")
 	}
+
 	if g.helpers["setMap"] {
 		g.line("")
 		g.line("func nuruSetMap[K comparable, V any](value map[K]V, key K, item V, location string) { if value == nil { nuruFail(location, \"assignment to uninitialized map\") }; value[key] = item }")
 	}
+
 	if g.helpers["makeSlice"] {
 		g.line("")
 		g.line("func nuruMakeSlice[T any](length int, location string) []T { if length < 0 { nuruFail(location, \"negative slice size\") }; return make([]T, length) }")
@@ -606,6 +629,7 @@ func (g *generator) emitHelpers() {
 		g.line("}")
 	}
 }
+
 func (g *generator) line(s string)          { g.writeIndent(); g.body.WriteString(s); g.body.WriteByte('\n') }
 func (g *generator) writeIndent()           { g.body.WriteString(strings.Repeat("\t", g.indent)) }
 func (g *generator) rawBlockStart(s string) { g.line(s + " {"); g.indent++ }

@@ -36,6 +36,7 @@ print(box.value, len(sliceAlias), len(values), counts["missing"], counts["sum"],
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if got, want := output, "2 1 2 0 2 0 120\n"; got != want {
 		t.Fatalf("output = %q, want %q", got, want)
 	}
@@ -54,6 +55,7 @@ print(order, box.value);`
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if output != "TV 7\n" {
 		t.Fatalf("output = %q, want target-before-value ordering", output)
 	}
@@ -70,6 +72,7 @@ print(text);`
 	if err != nil {
 		t.Fatal(err)
 	}
+
 	if output != "hello\n" || string(files.data["output"]) != "hello!" {
 		t.Fatalf("output = %q, files = %#v", output, files.data)
 	}
@@ -93,14 +96,18 @@ func TestRuntimeErrorsCarrySourceSpans(t *testing.T) {
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
 			options := Options{}
+
 			if name == "file" {
 				options.Files = failingFiles{}
 			}
+
 			_, err := runSource(context.Background(), test.source, options)
 			var runtimeErr *RuntimeError
+
 			if !errors.As(err, &runtimeErr) || !strings.Contains(runtimeErr.Message, test.message) {
 				t.Fatalf("error = %v, want runtime error containing %q", err, test.message)
 			}
+
 			if runtimeErr.Span.Filename != "test.nuru" || runtimeErr.Span.Start.Line < 1 || runtimeErr.Span.Start.Column < 1 {
 				t.Fatalf("runtime span = %v", runtimeErr.Span)
 			}
@@ -110,9 +117,11 @@ func TestRuntimeErrorsCarrySourceSpans(t *testing.T) {
 
 func TestCancellationStopsInfiniteLoop(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 20*time.Millisecond)
+
 	defer cancel()
 	_, err := runSource(ctx, `for true { }`, Options{})
 	var runtimeErr *RuntimeError
+
 	if !errors.As(err, &runtimeErr) || !strings.Contains(runtimeErr.Message, context.DeadlineExceeded.Error()) {
 		t.Fatalf("error = %v, want cancellation runtime error", err)
 	}
@@ -120,16 +129,22 @@ func TestCancellationStopsInfiniteLoop(t *testing.T) {
 
 func runSource(ctx context.Context, source string, options Options) (string, error) {
 	program, diagnostics := parser.Parse("test.nuru", []byte(source))
+
 	if len(diagnostics) != 0 {
 		return "", fmt.Errorf("parse: %v", diagnostics)
 	}
+
 	info, diagnostics := checker.Check(program)
+
 	if len(diagnostics) != 0 {
 		return "", fmt.Errorf("check: %v", diagnostics)
 	}
+
 	var output bytes.Buffer
+
 	options.Stdout = &output
 	err := Run(ctx, program, info, options)
+
 	return output.String(), err
 }
 
@@ -146,6 +161,7 @@ print(x, y);
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
+
 	if got, want := output, "100 200\n"; got != want {
 		t.Fatalf("output = %q, want %q", got, want)
 	}
@@ -163,6 +179,7 @@ func TestRunREPL(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected REPL error: %v", err)
 	}
+
 	if !strings.Contains(outBuf.String(), "15") {
 		t.Fatalf("REPL output = %q, want it to contain 15", outBuf.String())
 	}
@@ -172,9 +189,11 @@ type memoryFiles struct{ data map[string][]byte }
 
 func (files *memoryFiles) ReadFile(name string) ([]byte, error) {
 	data, ok := files.data[name]
+
 	if !ok {
 		return nil, os.ErrNotExist
 	}
+
 	return append([]byte(nil), data...), nil
 }
 

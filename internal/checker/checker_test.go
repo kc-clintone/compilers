@@ -50,6 +50,7 @@ print(len(ys), int(c), int("2"), string(c), string(true), string(3), len(m));`,
 	for name, source := range tests {
 		t.Run(name, func(t *testing.T) {
 			program := mustParse(t, source)
+
 			if _, diagnostics := Check(program); len(diagnostics) != 0 {
 				t.Fatalf("unexpected diagnostics: %v", diagnostics)
 			}
@@ -87,6 +88,7 @@ func TestInvalidPrograms(t *testing.T) {
 			if info != nil {
 				t.Fatal("checker returned Info for an invalid program")
 			}
+
 			if len(diagnostics) == 0 || !strings.Contains(diagnosticsText(diagnostics), test.message) {
 				t.Fatalf("diagnostics %v do not contain %q", diagnostics, test.message)
 			}
@@ -101,22 +103,29 @@ var point Point = Point{x: 1};
 var value int = 2;
 print(value);`)
 	info, diagnostics := Check(program)
+
 	if len(diagnostics) != 0 {
 		t.Fatalf("unexpected diagnostics: %v", diagnostics)
 	}
+
 	call := program.Stmts[0].(*ast.ExprStmt).Expr.(*ast.CallExpr)
 	identifier := call.Args[0].(*ast.IdentExpr)
+
 	if got := info.TypeOf(identifier); !got.Equal(Int) {
 		t.Fatalf("identifier type = %v, want int", got)
 	}
+
 	if symbol, ok := info.SymbolOf(identifier); !ok || symbol.Name != "value" || symbol.Kind != SymbolVariable {
 		t.Fatalf("resolved symbol = %#v, %v", symbol, ok)
 	}
+
 	if builtin, ok := info.BuiltinOf(call); !ok || builtin != BuiltinPrint {
 		t.Fatalf("resolved builtin = %q, %v", builtin, ok)
 	}
+
 	point := program.Decls[0].(*ast.StructDecl)
 	pointVar := program.Decls[1].(*ast.VarDecl)
+
 	if structure, ok := info.StructOf(pointVar.Type); !ok || structure.Decl != point {
 		t.Fatalf("resolved struct = %#v, %v", structure, ok)
 	}
@@ -125,16 +134,20 @@ print(value);`)
 func mustParse(t *testing.T, source string) *ast.Program {
 	t.Helper()
 	program, diagnostics := parser.Parse("test.nuru", []byte(source))
+
 	if len(diagnostics) != 0 {
 		t.Fatalf("parse diagnostics: %v", diagnostics)
 	}
+
 	return program
 }
 
 func diagnosticsText(diagnostics []diagnostic.Diagnostic) string {
 	var messages []string
+
 	for _, item := range diagnostics {
 		messages = append(messages, item.Message)
 	}
+
 	return strings.Join(messages, "\n")
 }

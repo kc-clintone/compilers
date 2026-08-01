@@ -17,6 +17,7 @@ func TestDiagnosticError(t *testing.T) {
 		Phase:   "checker",
 		Message: "unknown variable value",
 	}
+
 	if got, want := diagnostic.Error(), "example.nuru:3:5: checker: unknown variable value"; got != want {
 		t.Fatalf("Error() = %q, want %q", got, want)
 	}
@@ -30,13 +31,17 @@ func TestSortOrdersByFilenameAndOffsetStably(t *testing.T) {
 		makeDiagnostic("b.nuru", 1, "b-one"),
 		makeDiagnostic("a.nuru", 3, "a-three-second"),
 	}
+
 	Sort(diagnostics)
 
 	got := make([]string, len(diagnostics))
+
 	for index, diagnostic := range diagnostics {
 		got[index] = diagnostic.Message
 	}
+
 	want := []string{"a-three-first", "a-three-second", "a-eight", "b-one", "b-two"}
+
 	if !reflect.DeepEqual(got, want) {
 		t.Fatalf("sorted messages = %v, want %v", got, want)
 	}
@@ -45,6 +50,7 @@ func TestSortOrdersByFilenameAndOffsetStably(t *testing.T) {
 func TestSortAcceptsEmptySlices(t *testing.T) {
 	Sort(nil)
 	empty := []Diagnostic{}
+
 	Sort(empty)
 	if len(empty) != 0 {
 		t.Fatalf("empty slice length = %d", len(empty))
