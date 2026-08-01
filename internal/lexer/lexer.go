@@ -3,15 +3,16 @@
 QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer)
 ===============================================================================
 Overview:
-  Transform raw source bytes into lexical tokens. In this stage, you will implement
-  character classification helpers and keyword matching for variables and functions.
+  The lexer is the first compiler stage. It walks source bytes from left to right
+  and groups them into tokens that the parser can understand. Each token records
+  its category, original spelling, optional literal value, and source span.
+
+  This QUEST teaches the lexer to recognize numbers and names, distinguish names
+  from reserved words, and preserve boolean literal values for later stages.
 
 Tasks in this file:
-  - TASK [LEX-01]: Implement character classification helpers:
-                     - isDigit(c byte) bool
-                     - isIdentStart(c byte) bool
-  - TASK [LEX-02]: Implement keyword lookup in identifier() for reserved words
-                   ('var', 'func', 'if', 'else').
+  - TASK [LEX-01]: Classify digits and identifier-start characters.
+  - TASK [LEX-02]: Emit identifiers, reserved keywords, and boolean literals.
 
 Commands:
   - Run tests:  go test ./internal/lexer
@@ -35,7 +36,8 @@ import (
 	"github.com/kc-clintone/compilers/internal/token"
 )
 
-// Lexer converts Nuru source bytes into a sequence of Tokens.
+// Lexer tracks the source slice, current token boundaries, source position,
+// emitted tokens, and diagnostics while scanning a Nuru file.
 type Lexer struct {
 	filename       string
 	src            []byte
@@ -46,7 +48,8 @@ type Lexer struct {
 	diags          []diagnostic.Diagnostic
 }
 
-// Lex tokenizes input source code and appends an EOF token.
+// Lex tokenizes input source code, appends an EOF token, and returns any lexer
+// diagnostics alongside the token stream.
 func Lex(filename string, src []byte) ([]token.Token, []diagnostic.Diagnostic) {
 	l := &Lexer{filename: filename, src: src, line: 1, column: 1}
 
@@ -61,44 +64,8 @@ func Lex(filename string, src []byte) ([]token.Token, []diagnostic.Diagnostic) {
 	return l.tokens, l.diags
 }
 
-func (l *Lexer) pos() source.Position {
-	return source.Position{Offset: l.current, Line: l.line, Column: l.column}
-}
-func (l *Lexer) atEnd() bool { return l.current >= len(l.src) }
-func (l *Lexer) peek() byte {
-	if l.atEnd() {
-		return 0
-	}
-	return l.src[l.current]
-}
-func (l *Lexer) advance() byte {
-	c := l.src[l.current]
-	l.current++
-	if c == '\n' {
-		l.line++
-		l.column = 1
-	} else {
-		l.column++
-	}
-	return c
-}
-func (l *Lexer) match(want byte) bool {
-	if l.atEnd() || l.peek() != want {
-		return false
-	}
-	l.advance()
-	return true
-}
-func (l *Lexer) span() source.Span {
-	return source.Span{Filename: l.filename, Start: l.startPos, End: l.pos()}
-}
-func (l *Lexer) add(k token.Kind, lit any) {
-	l.tokens = append(l.tokens, token.Token{Kind: k, Lexeme: string(l.src[l.start:l.current]), Literal: lit, Span: l.span()})
-}
-func (l *Lexer) error(msg string) {
-	l.diags = append(l.diags, diagnostic.Diagnostic{Span: l.span(), Phase: "lexer", Message: msg})
-}
-
+// scanToken consumes one token, comment, or whitespace sequence beginning at
+// the current byte. Lex sets the token start and starting position beforehand.
 func (l *Lexer) scanToken() {
 	c := l.advance()
 
@@ -182,6 +149,65 @@ func (l *Lexer) scanToken() {
 	}
 }
 
+// pos returns the current half-open source position. It points immediately
+// after the most recently consumed byte.
+func (l *Lexer) pos() source.Position {
+	return source.Position{Offset: l.current, Line: l.line, Column: l.column}
+}
+
+// atEnd reports whether every source byte has been consumed.
+func (l *Lexer) atEnd() bool { return l.current >= len(l.src) }
+
+// peek returns the next byte without consuming it, or zero at end of input.
+func (l *Lexer) peek() byte {
+	if l.atEnd() {
+		return 0
+	}
+	return l.src[l.current]
+}
+
+// advance consumes and returns the next byte while updating the byte offset,
+// line, and one-based column. Callers must check atEnd before advancing.
+func (l *Lexer) advance() byte {
+	c := l.src[l.current]
+	l.current++
+	if c == '\n' {
+		l.line++
+		l.column = 1
+	} else {
+		l.column++
+	}
+	return c
+}
+
+// match consumes want when it is the next byte and reports whether it matched.
+// A failed match leaves the lexer position unchanged.
+func (l *Lexer) match(want byte) bool {
+	if l.atEnd() || l.peek() != want {
+		return false
+	}
+	l.advance()
+	return true
+}
+
+// span returns the half-open source range for the token currently being scanned.
+func (l *Lexer) span() source.Span {
+	return source.Span{Filename: l.filename, Start: l.startPos, End: l.pos()}
+}
+
+// add emits a token spanning the current token boundaries. The lexeme is copied
+// from the source; lit stores a decoded value such as int, string, or bool.
+func (l *Lexer) add(k token.Kind, lit any) {
+	l.tokens = append(l.tokens, token.Token{Kind: k, Lexeme: string(l.src[l.start:l.current]), Literal: lit, Span: l.span()})
+}
+
+// error records a lexer diagnostic over the token currently being scanned.
+func (l *Lexer) error(msg string) {
+	l.diags = append(l.diags, diagnostic.Diagnostic{Span: l.span(), Phase: "lexer", Message: msg})
+}
+
+// number consumes the remaining decimal digits, converts the complete lexeme
+// to an int, and emits token.Integer or an overflow diagnostic.
 func (l *Lexer) number() {
 	for isDigit(l.peek()) {
 		l.advance()
@@ -195,18 +221,23 @@ func (l *Lexer) number() {
 	l.add(token.Integer, int(n))
 }
 
+// identifier consumes the remainder of a name. It emits the mapped keyword
+// kind when the spelling is reserved, preserving bool values for true and
+// false; otherwise it emits token.Ident with the name as its literal value.
 func (l *Lexer) identifier() {
 	for isIdentPart(l.peek()) {
 		l.advance()
 	}
 	raw := string(l.src[l.start:l.current])
 
-	// TASK [LEX-02]: Implement keyword matching for reserved words ('var', 'func', 'if', 'else', 'true', 'false')!
-	// Look up 'raw' in token.Keywords. If present, add the corresponding token kind; otherwise add token.Ident.
+	// TASK [LEX-02]: Emit the identifier or reserved keyword represented by raw.
+	// Use token.Keywords, token.True, token.False, token.Ident, and l.add.
 	// See HINT [LEX-02-HINT] at the bottom of this file for details.
 	l.add(token.Ident, raw)
 }
 
+// stringLiteral consumes through the closing quote, decodes the supported
+// escape sequences, and emits token.String or a diagnostic for invalid input.
 func (l *Lexer) stringLiteral() {
 	var out []byte
 	for !l.atEnd() && l.peek() != '"' {
@@ -242,50 +273,41 @@ func (l *Lexer) stringLiteral() {
 	l.add(token.String, string(out))
 }
 
-// TASK [LEX-01]: Implement character classification helpers:
-//   - isDigit returns true if character 'c' is between '0' and '9'.
-//   - isIdentStart returns true if 'c' can start an identifier ('_', 'a'-'z', 'A'-'Z').
+// isDigit reports whether c is an ASCII decimal digit.
+//
+// TASK [LEX-01]: Implement isDigit and isIdentStart using ASCII byte ranges.
+// Use direct byte comparisons for '0'-'9', '_', 'a'-'z', and 'A'-'Z'.
 // See HINT [LEX-01-HINT] at the bottom of this file for details.
-
 func isDigit(c byte) bool {
 	return false
 }
 
+// isIdentStart reports whether c can begin a Nuru identifier: an ASCII letter
+// or underscore. Digits are accepted only after the first character.
 func isIdentStart(c byte) bool {
 	return false
 }
 
+// isIdentPart reports whether c may follow the first identifier character.
 func isIdentPart(c byte) bool {
 	return isIdentStart(c) || isDigit(c)
 }
 
 /*
 ===============================================================================
-QUEST HINTS & SOLUTIONS
+QUEST HINTS
 ===============================================================================
 HINT [LEX-01-HINT]:
-  Implement isDigit and isIdentStart:
-    func isDigit(c byte) bool {
-        return c >= '0' && c <= '9'
-    }
-
-    func isIdentStart(c byte) bool {
-        return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-    }
+  1. For isDigit, check that c is at least '0' and at most '9'.
+  2. For isIdentStart, accept underscore first.
+  3. Also accept c when it falls in either ASCII letter range.
+  4. Return false for every other byte.
 
 HINT [LEX-02-HINT]:
-  Check token.Keywords for 'raw':
-    if k, ok := token.Keywords[raw]; ok {
-        switch k {
-        case token.True:
-            l.add(k, true)
-        case token.False:
-            l.add(k, false)
-        default:
-            l.add(k, nil)
-        }
-    } else {
-        l.add(token.Ident, raw)
-    }
+  1. Look up raw in token.Keywords.
+  2. If it is not present, emit token.Ident and preserve raw as the literal.
+  3. If it maps to token.True or token.False, emit the mapped kind with the
+     corresponding Go bool literal.
+  4. Emit every other keyword with a nil literal.
 ===============================================================================
 */

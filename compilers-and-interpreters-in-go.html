@@ -1,105 +1,1134 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nuru QUESTS — Compilers &amp; Interpreters in Go</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
-<style>
-:root{--ink:#0f1621;--panel:#161f2b;--panel2:#1c2734;--rule:#2a3644;--soft:#212b38;--text:#ccd6e0;--dim:#8695a8;--dimmer:#5d6b7d;--signal:#52dbc7;--signal2:#2f7d72;--amber:#e8a23d;--danger:#e2645a;--display:'Space Grotesk',sans-serif;--body:'IBM Plex Sans',sans-serif;--mono:'IBM Plex Mono',monospace}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--ink);color:var(--text);font:16px/1.65 var(--body)}::selection{background:var(--signal2);color:#fff}a{color:var(--signal)}code,.mono{font-family:var(--mono)}h1,h2,h3,h4{color:#eef2f6;font-family:var(--display);line-height:1.2;margin:0 0 .55em}.wrap{max-width:980px;margin:auto;padding:0 28px}
-.topbar{position:sticky;top:0;z-index:20;background:rgba(15,22,33,.92);backdrop-filter:blur(9px);border-bottom:1px solid var(--rule)}.topbar-inner{max-width:980px;margin:auto;padding:13px 28px;display:flex;align-items:center;justify-content:space-between;gap:16px}.brand{color:#eef2f6;font:700 15px var(--display);display:flex;align-items:center;gap:9px;white-space:nowrap}.dot{width:8px;height:8px;border-radius:50%;background:var(--signal);box-shadow:0 0 9px var(--signal)}nav{display:flex;overflow:auto;scrollbar-width:none}nav a{color:var(--dim);font:12px var(--mono);padding:7px 9px;text-decoration:none;white-space:nowrap;border-radius:6px}nav a:hover,nav a.active{color:var(--signal);background:rgba(82,219,199,.08)}
-section{padding:56px 0;scroll-margin-top:62px}.divider{border-top:1px solid var(--rule)}.hero{padding-top:70px}.eyebrow{color:var(--signal);font:12px var(--mono);letter-spacing:.12em;text-transform:uppercase;display:flex;align-items:center;gap:10px;margin-bottom:17px}.eyebrow:before{content:"";width:24px;height:1px;background:var(--signal)}h1{font-size:clamp(2.25rem,5.2vw,4rem);max-width:15ch}.lede{color:var(--dim);max-width:68ch}.hero .lede{font-size:1.08rem}.stats{display:flex;gap:28px;flex-wrap:wrap;margin:28px 0 0}.stat{font-family:var(--mono)}.stat b{display:block;color:var(--amber);font-size:1.35rem}.stat span{color:var(--dimmer);font-size:11px;text-transform:uppercase;letter-spacing:.08em}
-.tokenizer,.code,.terminal{background:#0d141d;border:1px solid var(--rule);border-radius:10px;overflow:hidden;margin:20px 0}.tokenizer{margin-top:38px}.bar{display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--panel2);border-bottom:1px solid var(--rule);padding:9px 14px;color:var(--dim);font:12px var(--mono)}.lights{display:flex;gap:6px}.lights i{width:8px;height:8px;background:var(--rule);border-radius:50%}.tokenizer-body{padding:16px}textarea{width:100%;min-height:58px;resize:vertical;background:var(--panel2);border:1px solid var(--rule);border-radius:7px;color:var(--text);padding:10px 12px;font:14px var(--mono)}textarea:focus{outline:none;border-color:var(--signal2)}#token-output{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px;min-height:30px}.token{display:inline-flex;gap:6px;padding:4px 8px;border:1px solid var(--rule);border-radius:5px;background:var(--panel2);color:var(--dim);font:12px var(--mono)}.token b{color:var(--signal)}.token.keyword b{color:var(--amber)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.card{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:22px 24px}.card p:last-child{margin-bottom:0}.objectives{list-style:none;padding:0;margin:12px 0 0}.objectives li{position:relative;padding:8px 0 8px 25px;color:var(--dim);border-bottom:1px dashed var(--soft)}.objectives li:last-child{border:0}.objectives li:before{content:"→";position:absolute;left:0;color:var(--signal);font-family:var(--mono)}
-.callout{border-left:3px solid var(--signal);background:rgba(82,219,199,.05);border-radius:0 8px 8px 0;padding:15px 18px;margin:20px 0}.callout.warn{border-color:var(--amber);background:rgba(232,162,61,.05)}.callout.danger{border-color:var(--danger);background:rgba(226,100,90,.05)}.label{display:block;color:var(--signal);font:11px var(--mono);letter-spacing:.08em;text-transform:uppercase;margin-bottom:5px}.warn .label{color:var(--amber)}.danger .label{color:var(--danger)}
-.pipeline{position:relative;padding-left:39px;margin-top:28px}.pipeline:before{content:"";position:absolute;left:11px;top:8px;bottom:8px;width:3px;background:var(--rule)}.pipe-stage{position:relative;padding:0 0 30px}.pipe-stage:last-child{padding-bottom:0}.node{position:absolute;left:-39px;top:0;width:27px;height:27px;border:1px solid var(--rule);border-radius:7px;background:var(--panel2);display:grid;place-items:center;color:var(--dim);font:11px var(--mono)}.pipe-stage.active .node{background:var(--signal);border-color:var(--signal);color:var(--ink);box-shadow:0 0 0 4px rgba(82,219,199,.13)}.pipe-stage p{color:var(--dim);margin:0}
-.quest-head{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}.quest-num{color:var(--amber);font:13px var(--mono);letter-spacing:.06em}.duration{border:1px solid var(--rule);border-radius:999px;color:var(--dimmer);font:12px var(--mono);padding:2px 9px}.tasks{display:grid;gap:12px;margin:24px 0}.task{background:var(--panel);border:1px solid var(--rule);border-radius:9px;padding:17px 19px}.task-id{color:var(--signal);font:700 11px var(--mono);letter-spacing:.06em}.task h3{font-size:1.05rem;margin:.3em 0}.task p{color:var(--dim);margin:0}
-.code pre,.terminal pre{margin:0;padding:16px 18px;overflow:auto;color:var(--text);font:13px/1.65 var(--mono)}.code code[data-source]{display:block}.code-line{display:block;min-height:1.65em;padding-left:4.4em;position:relative;white-space:pre}.code-line:before{content:attr(data-line);position:absolute;left:0;width:3.2em;padding-right:.8em;text-align:right;color:var(--dimmer);border-right:1px solid var(--soft);user-select:none}.copy{background:transparent;border:1px solid var(--rule);border-radius:5px;color:var(--dim);padding:4px 9px;font:11px var(--mono);cursor:pointer}.copy:hover,.copy.done{color:var(--signal);border-color:var(--signal2)}.prompt{color:var(--signal)}.output{color:#eef2f6}.kw{color:var(--amber)}.str{color:#8fd18b}.num{color:#7fb8e0}.comment{color:var(--dimmer);font-style:italic}.step{margin:30px 0}.step h3{font-size:1.1rem}.step p{color:var(--dim)}.takeaway h3{font-size:1rem}.takeaway small{color:var(--amber);font:11px var(--mono);text-transform:uppercase}.takeaway p{color:var(--dim)}footer{border-top:1px solid var(--rule);padding:32px 0 50px;color:var(--dimmer);font-size:14px}
-@media(max-width:760px){.topbar-inner{align-items:flex-start;flex-direction:column}.grid{grid-template-columns:1fr}.hero{padding-top:52px}section{padding:45px 0}.wrap{padding:0 20px}}
-</style>
-</head>
-<body>
-<header class="topbar"><div class="topbar-inner"><div class="brand"><span class="dot"></span>Nuru QUESTS</div><nav aria-label="Workshop sections"><a href="#setup">Setup</a><a href="#q1">Q1 · Lexer</a><a href="#q2">Q2 · Parser</a><a href="#q3">Q3 · Interpreter</a><a href="#q4">Q4 · Transpiler</a><a href="#takeaways">Takeaways</a></nav></div></header>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Nuru QUESTS — Compilers &amp; Interpreters in Go</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --ink: #0f1621;
+        --panel: #161f2b;
+        --panel2: #1c2734;
+        --rule: #2a3644;
+        --soft: #212b38;
+        --text: #ccd6e0;
+        --dim: #8695a8;
+        --dimmer: #5d6b7d;
+        --signal: #52dbc7;
+        --signal2: #2f7d72;
+        --amber: #e8a23d;
+        --danger: #e2645a;
+        --display: "Space Grotesk", sans-serif;
+        --body: "IBM Plex Sans", sans-serif;
+        --mono: "IBM Plex Mono", monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--ink);
+        color: var(--text);
+        font: 16px/1.65 var(--body);
+      }
+      ::selection {
+        background: var(--signal2);
+        color: #fff;
+      }
+      a {
+        color: var(--signal);
+      }
+      code {
+        font-family: monospace;
+      }
+      code:not(pre code) {
+        background-color: #281e3e;
+        color: color-mix(in srgb, currentColor, white 30%);
+        padding: 1px 4px;
+        border-radius: 6px;
+      }
+      .mono {
+        font-family: var(--mono);
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        color: #eef2f6;
+        font-family: var(--display);
+        line-height: 1.2;
+        margin: 0 0 0.55em;
+      }
+      .wrap {
+        max-width: 980px;
+        margin: auto;
+        padding: 0 28px;
+      }
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 20;
+        background: rgba(15, 22, 33, 0.92);
+        backdrop-filter: blur(9px);
+        border-bottom: 1px solid var(--rule);
+      }
+      .topbar-inner {
+        max-width: 980px;
+        margin: auto;
+        padding: 13px 28px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .brand {
+        color: #eef2f6;
+        font: 700 15px var(--display);
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        white-space: nowrap;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--signal);
+        box-shadow: 0 0 9px var(--signal);
+      }
+      /* Base styles for ALL icons */
+      .icon {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        background-position: center;
+        vertical-align: middle;
+      }
+      .icon-info {
+        background-image: url("https://img.icons8.com/?size=100&id=tjZK3X8ryipL&format=png&color=000000");
+      }
+      .icon-important {
+        background-image: url("https://img.icons8.com/?size=100&id=1KhA340iwqg6&format=png&color=000000");
+      }
+      nav {
+        display: flex;
+        overflow: auto;
+        scrollbar-width: none;
+      }
+      nav a {
+        color: var(--dim);
+        font: 12px var(--mono);
+        padding: 7px 9px;
+        text-decoration: none;
+        white-space: nowrap;
+        border-radius: 6px;
+      }
+      nav a:hover,
+      nav a.active {
+        color: var(--signal);
+        background: rgba(82, 219, 199, 0.08);
+      }
+      section {
+        padding: 56px 0;
+        scroll-margin-top: 62px;
+      }
+      .divider {
+        border-top: 1px solid var(--rule);
+      }
+      .hero {
+        padding-top: 70px;
+      }
+      .eyebrow {
+        color: var(--signal);
+        font: 12px var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 17px;
+      }
+      .eyebrow:before {
+        content: "";
+        width: 24px;
+        height: 1px;
+        background: var(--signal);
+      }
+      h1 {
+        font-size: clamp(2.25rem, 5.2vw, 4rem);
+        max-width: 15ch;
+      }
+      .lede {
+        color: var(--dim);
+        max-width: 68ch;
+      }
+      .hero .lede {
+        font-size: 1.08rem;
+      }
+      .stats {
+        display: flex;
+        gap: 28px;
+        flex-wrap: wrap;
+        margin: 28px 0 0;
+      }
+      .stat {
+        font-family: var(--mono);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+      }
+      .stat b {
+        display: block;
+        color: var(--amber);
+        font-size: 1.35rem;
+      }
+      .stat span {
+        color: var(--dimmer);
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      .tokenizer,
+      .code,
+      .terminal {
+        background: #0d141d;
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 20px 0;
+      }
+      .tokenizer {
+        margin-top: 38px;
+      }
+      .bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        background: var(--panel2);
+        border-bottom: 1px solid var(--rule);
+        padding: 9px 14px;
+        color: var(--dim);
+        font: 12px var(--mono);
+      }
+      .lights {
+        display: flex;
+        gap: 6px;
+      }
+      .lights i {
+        width: 8px;
+        height: 8px;
+        background: var(--rule);
+        border-radius: 50%;
+      }
+      .tokenizer-body {
+        padding: 16px;
+      }
+      textarea {
+        width: 100%;
+        min-height: 58px;
+        resize: vertical;
+        background: var(--panel2);
+        border: 1px solid var(--rule);
+        border-radius: 7px;
+        color: var(--text);
+        padding: 10px 12px;
+        font: 14px var(--mono);
+      }
+      textarea:focus {
+        outline: none;
+        border-color: var(--signal2);
+      }
+      #token-output {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: 12px;
+        min-height: 30px;
+      }
+      .token {
+        display: inline-flex;
+        gap: 6px;
+        padding: 4px 8px;
+        border: 1px solid var(--rule);
+        border-radius: 5px;
+        background: var(--panel2);
+        color: var(--dim);
+        font: 12px var(--mono);
+      }
+      .token b {
+        color: var(--signal);
+      }
+      .token.keyword b {
+        color: var(--amber);
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+      .card {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        padding: 22px 24px;
+      }
+      .card p:last-child {
+        margin-bottom: 0;
+      }
+      .objectives {
+        list-style: none;
+        padding: 0;
+        margin: 12px 0 0;
+      }
+      .objectives li {
+        position: relative;
+        padding: 8px 0 8px 25px;
+        color: var(--dim);
+        border-bottom: 1px dashed var(--soft);
+      }
+      .objectives li:last-child {
+        border: 0;
+      }
+      .objectives li:before {
+        content: "→";
+        position: absolute;
+        left: 0;
+        color: var(--signal);
+        font-family: var(--mono);
+      }
+      .callout {
+        border-left: 3px solid var(--signal);
+        background: rgba(82, 219, 199, 0.05);
+        border-radius: 0 8px 8px 0;
+        padding: 15px 18px;
+        margin: 20px 0;
+      }
+      .callout.warn {
+        border-color: var(--amber);
+        background: rgba(232, 162, 61, 0.05);
+      }
+      .callout.danger {
+        border-color: var(--danger);
+        background: rgba(226, 100, 90, 0.05);
+      }
+      .label {
+        display: block;
+        color: var(--signal);
+        font: 11px var(--mono);
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: 5px;
+      }
+      .warn .label {
+        color: var(--amber);
+      }
+      .danger .label {
+        color: var(--danger);
+      }
+      .pipeline {
+        position: relative;
+        padding-left: 39px;
+        margin-top: 28px;
+      }
+      .pipeline:before {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 8px;
+        bottom: 8px;
+        width: 3px;
+        background: var(--rule);
+      }
+      .pipe-stage {
+        position: relative;
+        padding: 0 0 30px;
+      }
+      .pipe-stage:last-child {
+        padding-bottom: 0;
+      }
+      .node {
+        position: absolute;
+        left: -39px;
+        top: 0;
+        width: 27px;
+        height: 27px;
+        border: 1px solid var(--rule);
+        border-radius: 7px;
+        background: var(--panel2);
+        display: grid;
+        place-items: center;
+        color: var(--dim);
+        font: 11px var(--mono);
+      }
+      .pipe-stage.active .node {
+        background: var(--signal);
+        border-color: var(--signal);
+        color: var(--ink);
+        box-shadow: 0 0 0 4px rgba(82, 219, 199, 0.13);
+      }
+      .pipe-stage p {
+        color: var(--dim);
+        margin: 0;
+      }
+      .quest-head {
+        display: flex;
+        align-items: baseline;
+        gap: 12px;
+        flex-wrap: wrap;
+      }
+      .quest-num {
+        color: var(--amber);
+        font: 13px var(--mono);
+        letter-spacing: 0.06em;
+      }
+      .duration {
+        border: 1px solid var(--rule);
+        border-radius: 999px;
+        color: var(--dimmer);
+        font: 12px var(--mono);
+        padding: 2px 9px;
+      }
+      .tasks {
+        display: grid;
+        gap: 12px;
+        margin: 24px 0;
+      }
+      .task {
+        background: var(--panel);
+        border: 1px solid var(--rule);
+        border-radius: 9px;
+        padding: 17px 19px;
+      }
+      .task-id {
+        color: var(--signal);
+        font: 700 11px var(--mono);
+        letter-spacing: 0.06em;
+      }
+      .task h3 {
+        font-size: 1.05rem;
+        margin: 0.3em 0;
+      }
+      .task p {
+        color: var(--dim);
+        margin: 0;
+      }
+      .code pre,
+      .terminal pre {
+        margin: 0;
+        padding: 16px 18px;
+        overflow: auto;
+        color: var(--text);
+        font: 13px/1.65 var(--mono);
+      }
+      .code code[data-source] {
+        display: block;
+      }
+      .code-line {
+        display: block;
+        min-height: 1.65em;
+        padding-left: 4.4em;
+        position: relative;
+        white-space: pre;
+      }
+      .code-line:before {
+        content: attr(data-line);
+        position: absolute;
+        left: 0;
+        width: 3.2em;
+        padding-right: 0.8em;
+        text-align: right;
+        color: var(--dimmer);
+        border-right: 1px solid var(--soft);
+        user-select: none;
+      }
+      .copy {
+        background: transparent;
+        border: 1px solid var(--rule);
+        border-radius: 5px;
+        color: var(--dim);
+        padding: 4px 9px;
+        font: 11px var(--mono);
+        cursor: pointer;
+      }
+      .copy:hover,
+      .copy.done {
+        color: var(--signal);
+        border-color: var(--signal2);
+      }
+      .terminal-command::before {
+        content: "$ ";
+        color: var(--signal);
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      .output {
+        color: #eef2f6;
+      }
+      .kw {
+        color: var(--amber);
+      }
+      .str {
+        color: #8fd18b;
+      }
+      .num {
+        color: #7fb8e0;
+      }
+      .comment {
+        color: var(--dimmer);
+        font-style: italic;
+      }
+      .section-divider {
+        width: 256px;
+        height: 4px;
+        background-color: var(--rule);
+        border: none;
+        margin: 24px auto;
+        border-radius: 2px;
+      }
+      .step {
+        margin: 30px 0;
+      }
+      .step h3 {
+        font-size: 1.1rem;
+      }
+      .step p {
+        color: var(--dim);
+      }
+      .quest-cycle {
+        --cycle-surface: var(--ink);
+        --cycle-shadow-contrast: contrast-color(var(--cycle-surface));
+        --cycle-shadow-color: color-mix(
+          in srgb,
+          var(--cycle-surface) 72%,
+          var(--cycle-shadow-contrast)
+        );
+        --cycle-gap: 40px;
+        --cycle-row-gap: 70px;
+        --cycle-line: 4px;
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-rows: repeat(2, minmax(72px, 1fr));
+        gap: var(--cycle-row-gap) var(--cycle-gap);
+        margin: 4px 0;
+        padding: 26px 0px;
+      }
+      .cycle-stage {
+        position: relative;
+        z-index: 1;
+        display: grid;
+        grid-template-columns: 27px minmax(0, 1fr);
+        align-items: start;
+        gap: 12px;
+      }
 
-<main>
-<div class="wrap"><section class="hero" id="top"><div class="eyebrow">1 August · a hands-on Go workshop</div><h1>Build Nuru, one QUEST at a time.</h1><p class="lede">Follow source text through a lexer and recursive-descent parser, then execute the same AST two ways: directly with a tree-walking interpreter and indirectly by transpiling it into readable Go.</p><div class="stats"><div class="stat"><b>4</b><span>QUEST stages</span></div><div class="stat"><b>15 min</b><span>per QUEST</span></div><div class="stat"><b>2</b><span>execution paths</span></div><div class="stat"><b>0</b><span>new files needed</span></div></div>
-<div class="tokenizer"><div class="bar"><span class="lights"><i></i><i></i><i></i></span><span>live Nuru token preview · QUEST 1</span></div><div class="tokenizer-body"><textarea id="token-input" spellcheck="false">var total = price * 2 + 5
-func double(value) { return value * 2 }</textarea><div id="token-output"></div></div></div></section></div>
+      .cycle-stage:nth-of-type(2):before,
+      .cycle-stage:nth-of-type(3):before,
+      .cycle-stage:nth-of-type(1):after,
+      .cycle-stage:nth-of-type(2):after {
+        content: "";
+        position: absolute;
+        z-index: -1;
+        background: var(--rule);
+      }
+      .cycle-stage:nth-of-type(2):before,
+      .cycle-stage:nth-of-type(3):before {
+        top: 13px;
+        /* Anchor to the center of the number circle */
+        right: calc(100% - 13px);
+        /* Span exactly across the gap and stop at the right border of column 1 */
+        width: calc(var(--cycle-gap) + 13px);
+        height: var(--cycle-line);
+      }
+      .cycle-stage:nth-of-type(1):after,
+      .cycle-stage:nth-of-type(2):after {
+        top: 13px;
+        left: 13px;
+        width: var(--cycle-line);
+        height: calc(100% + var(--cycle-row-gap));
+      }
+      .cycle-stage:nth-of-type(3) {
+        z-index: 2;
+        grid-column: 2;
+        grid-row: 2;
+      }
+      .cycle-stage:nth-of-type(4) {
+        grid-column: 1;
+        grid-row: 2;
+      }
+      .cycle-number {
+        position: relative;
+        z-index: 2;
+        display: grid;
+        width: 27px;
+        height: 27px;
+        place-items: center;
+        border: 1px solid var(--rule);
+        border-radius: 7px;
+        background: var(--panel2);
+        color: var(--dim);
+        font: 11px var(--mono);
+      }
+      .cycle-stage:nth-of-type(1) .cycle-number:after,
+      .cycle-stage:nth-of-type(4) .cycle-number:after {
+        content: "";
+        position: absolute;
+        top: 13px;
+        left: 100%;
+        width: 18px;
+        height: var(--cycle-line);
+        background: var(--rule);
+      }
+      .cycle-copy {
+        width: 100%;
+        height: 100%;
+        min-height: 72px;
+        padding: 1% 18px;
+        border-right: 3px solid var(--rule);
+        border-radius: 6px;
+        box-shadow: 3px 3px 2px
+          color-mix(in srgb, var(--cycle-shadow-color) 10%, transparent);
+      }
 
-<div class="wrap"><section id="setup" class="divider"><div class="eyebrow">Before QUEST 1 · untimed</div><h2>Your map and equipment</h2><p class="lede">You are not building a repository from an empty directory. The code, tests, commands, and exact TASK locations are already waiting for you.</p>
-<div class="grid"><div class="card"><h3>What you need</h3><ul class="objectives"><li>Go 1.22 or newer</li><li>Deep practical comfort with structs, pointers, slices, maps, interfaces, and navigating Go packages</li><li>A terminal, an editor, curiosity, and a sense of adventure</li></ul></div><div class="card"><h3>Where to begin</h3><ul class="objectives"><li>Start from <code>main</code> or your own branch based on it</li><li>Use this page or the README as the guiding document</li><li>All files and TASK locations are already provided</li><li>Study the larger reference implementation later on the <code>lugha</code> branch</li></ul></div></div>
-<div class="callout"><span class="label">The Nuru scope</span>The workshop scaffold is a small dynamically typed subset. You will work on identifiers, variables, branches, and top-level function declarations and calls. There are no closures. The later reference grows Nuru into a statically typed, bootstrap-ready language.</div>
-<div class="pipeline" id="pipeline"><div class="pipe-stage" data-target="q1"><span class="node">01</span><h3>Lexer</h3><p>Source bytes become tokens; identifiers and keywords acquire meaning.</p></div><div class="pipe-stage" data-target="q2"><span class="node">02</span><h3>Recursive-descent parser and AST</h3><p>Tokens become branches, declarations, calls, identifiers, and expressions.</p></div><div class="pipe-stage" data-target="q3"><span class="node">03</span><h3>Tree-walking interpreter</h3><p>The AST produces values using global state and fresh function call frames.</p></div><div class="pipe-stage" data-target="q4"><span class="node">04</span><h3>Go transpiler</h3><p>The same AST becomes Go source and then a normal native Go executable.</p></div></div>
-<div class="step"><h3>Follow the QUEST loop</h3><p>Read this guide, find the next QUEST in order, read its banner, search for each uniquely named TASK, complete and test those locations, optionally delete the finished TASK markers, then return here and repeat.</p><div class="terminal"><div class="bar">find the QUEST banners</div><pre><span class="prompt">$</span> grep -rn "QUEST STAGE" internal
+      .cycle-stage h4 {
+        margin: 0 0 3px;
+        font-size: 1rem;
+      }
+
+      .cycle-stage p {
+        margin: 6px 0px;
+        color: var(--dim);
+      }
+      .takeaway h3 {
+        font-size: 1rem;
+      }
+      .takeaway small {
+        color: var(--amber);
+        font: 11px var(--mono);
+        text-transform: uppercase;
+      }
+      .takeaway p {
+        color: var(--dim);
+      }
+      footer {
+        border-top: 1px solid var(--rule);
+        padding: 32px 0 50px;
+        color: var(--dimmer);
+        font-size: 14px;
+      }
+      @media (max-width: 760px) {
+        .topbar-inner {
+          align-items: stretch;
+          flex-direction: column;
+          gap: 8px;
+          padding: 10px 20px 8px;
+        }
+        .brand {
+          justify-content: center;
+        }
+        nav {
+          width: 100%;
+          padding-bottom: 2px;
+          overscroll-behavior-inline: contain;
+          scroll-snap-type: inline proximity;
+        }
+        nav a {
+          min-height: 40px;
+          display: inline-flex;
+          align-items: center;
+          scroll-snap-align: start;
+        }
+        section {
+          padding: 42px 0;
+          scroll-margin-top: 112px;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+        .hero {
+          padding-top: 42px;
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 18px 12px;
+        }
+        .wrap {
+          padding: 0 20px;
+        }
+        .card,
+        .task {
+          padding: 18px;
+        }
+        .bar {
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .bar > span:not(.lights) {
+          flex: 1 1 220px;
+          overflow-wrap: anywhere;
+        }
+        .copy {
+          min-width: 52px;
+          min-height: 36px;
+        }
+        .code pre,
+        .terminal pre {
+          padding: 14px 12px;
+          font-size: 12px;
+          -webkit-overflow-scrolling: touch;
+        }
+        .code-line {
+          padding-left: 3.8em;
+        }
+        .code-line:before {
+          width: 2.8em;
+          padding-right: 0.6em;
+        }
+        .pipeline {
+          padding-left: 34px;
+        }
+        .quest-cycle {
+          display: grid;
+          grid-template-columns: 1fr;
+          gap: 14px;
+          padding: 18px 14px;
+        }
+        .cycle-stage {
+          grid-column: auto !important;
+          grid-row: auto !important;
+          gap: 8px;
+        }
+        .cycle-stage:before,
+        .cycle-stage:after,
+        .cycle-number:after {
+          display: none !important;
+        }
+        .cycle-copy {
+          min-height: 0;
+          padding: 8px 14px;
+        }
+        .cycle-stage p {
+          font-size: 0.85rem;
+          line-height: 1.45;
+        }
+      }
+      @media (max-width: 430px) {
+        body {
+          font-size: 15px;
+        }
+        .topbar-inner,
+        .wrap {
+          padding-left: 14px;
+          padding-right: 14px;
+        }
+        h1 {
+          font-size: 2.15rem;
+        }
+        .stats {
+          grid-template-columns: 1fr 1fr;
+        }
+        .card,
+        .task,
+        .callout {
+          padding: 15px;
+        }
+        textarea {
+          min-height: 92px;
+          font-size: 13px;
+        }
+        .code pre,
+        .terminal pre {
+          font-size: 11px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-inner">
+        <div class="brand"><span class="dot"></span>Nuru QUESTS</div>
+        <nav aria-label="Workshop sections">
+          <a href="#setup">Setup</a><a href="#q1">Q1 · Lexer</a
+          ><a href="#q2">Q2 · Parser</a><a href="#q3">Q3 · Interpreter</a
+          ><a href="#q4">Q4 · Transpiler</a><a href="#takeaways">Takeaways</a>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <div class="wrap">
+        <section class="hero" id="top">
+          <div class="eyebrow">1 August · a hands-on Go workshop</div>
+          <h1>Build Nuru, one QUEST at a time.</h1>
+          <p class="lede">
+            Follow source text through a lexer and recursive-descent parser,
+            then execute the same AST two ways: directly with a tree-walking
+            interpreter and indirectly by transpiling it into readable Go.
+          </p>
+          <div class="stats">
+            <div class="stat"><b>4</b><span>QUEST stages</span></div>
+            <div class="stat"><b>15 min</b><span>per QUEST</span></div>
+            <div class="stat"><b>2</b><span>execution paths</span></div>
+            <div class="stat"><b>0</b><span>new files needed</span></div>
+          </div>
+          <div class="tokenizer">
+            <div class="bar">
+              <span class="lights"><i></i><i></i><i></i></span
+              ><span>Nuru lexer tokens preview · QUEST 1</span>
+            </div>
+            <div class="tokenizer-body">
+              <textarea id="token-input" spellcheck="false">
+var total = price * 2 + 5
+func double(value) { return value * 2 }</textarea
+              >
+              <div id="token-output"></div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="wrap">
+        <section id="setup" class="divider">
+          <div class="eyebrow">Before QUEST 1 · untimed</div>
+          <h2>Map and Equipment</h2>
+          <p class="lede">
+            The repository already contains starter code. Most of the code,
+            tests, commands, and exact TASK locations are already waiting for
+            you.
+          </p>
+          <div class="grid">
+            <div class="card">
+              <h3>What you need</h3>
+              <ul class="objectives">
+                <li>Go 1.22 or newer.</li>
+                <li>
+                  Deep practical comfort with structs, pointers, slices, maps,
+                  interfaces, and navigating Go packages.
+                </li>
+                <li>
+                  A terminal, an editor, curiosity, and a sense of adventure.
+                </li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>Where to begin</h3>
+              <ul class="objectives">
+                <li>
+                  Start from <code>main</code> or on your own branch based on
+                  it.
+                </li>
+                <li>Use this page or the README as the guiding document.</li>
+                <li>All files and TASK locations are already provided.</li>
+                <li>
+                  There is a larger implementation of the language with more
+                  features in the
+                  <code>lugha</code> branch. You can study this on your own
+                  time.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            <span class="label">The Nuru scope</span>
+            <p>
+              The code on the <code>main</code> is a small dynamically typed
+              subset of the program in the <code>lugha</code> branch. We will
+              work on identifiers, variables, branches, and top-level function
+              declarations and calls. Some features of the reference code are
+              out of scope for the workshop.
+            </p>
+            <p>
+              The reference implementation is
+              <a
+                href="https://en.wikipedia.org/wiki/Bootstrapping#Computing"
+                target="_blank"
+                ><b>bootstrap-ready</b></a
+              >, meaning you can now write a compiler in the Nuru language for
+              the Nuru language.
+            </p>
+          </div>
+          <div class="pipeline" id="pipeline">
+            <div class="pipe-stage" data-target="q1">
+              <span class="node">01</span>
+              <h3>Lexer</h3>
+              <p>
+                Source bytes become tokens; identifiers and keywords acquire
+                meaning.
+              </p>
+            </div>
+            <div class="pipe-stage" data-target="q2">
+              <span class="node">02</span>
+              <h3>Recursive-descent parser and AST</h3>
+              <p>
+                Tokens become branches, declarations, calls, identifiers, and
+                expressions.
+              </p>
+            </div>
+            <div class="pipe-stage" data-target="q3">
+              <span class="node">03</span>
+              <h3>Tree-walking interpreter</h3>
+              <p>
+                The AST produces values using global state and fresh function
+                call frames.
+              </p>
+            </div>
+            <div class="pipe-stage" data-target="q4">
+              <span class="node">04</span>
+              <h3>Go transpiler</h3>
+              <p>
+                The same AST becomes Go source and then a normal native Go
+                executable.
+              </p>
+            </div>
+          </div>
+
+          <hr class="section-divider" />
+
+          <div class="step">
+            <h3>Follow the QUEST loop</h3>
+            <div class="quest-cycle" role="list" aria-label="QUEST cycle">
+              <article class="cycle-stage" role="listitem">
+                <span class="cycle-number">01</span>
+                <div class="cycle-copy">
+                  <h4>Read the guide</h4>
+                  <p>Get the goal and context for the next stage.</p>
+                </div>
+              </article>
+              <article class="cycle-stage" role="listitem">
+                <span class="cycle-number">02</span>
+                <div class="cycle-copy">
+                  <h4>Find the next QUEST</h4>
+                  <p>Work through the numbered QUESTS in order.</p>
+                </div>
+              </article>
+              <article class="cycle-stage" role="listitem">
+                <span class="cycle-number">03</span>
+                <div class="cycle-copy">
+                  <h4>Map the TASKS</h4>
+                  <p>Read the banner, then locate each unique TASK marker.</p>
+                </div>
+              </article>
+              <article class="cycle-stage" role="listitem">
+                <span class="cycle-number">04</span>
+                <div class="cycle-copy">
+                  <h4>Complete and test</h4>
+                  <p>Implement the named locations and verify the result.</p>
+                </div>
+              </article>
+            </div>
+
+            <hr class="section-divider" />
+
+            <div class="terminal">
+              <div class="bar">find the QUEST banners</div>
+              <pre><span class="terminal-command">grep -rn "QUEST STAGE" internal</span>
 <span class="output">internal/interpreter/interpreter.go:3:QUEST STAGE 3: THE LIVING ENGINE (Interpreter)
 internal/compiler/compiler.go:3:QUEST STAGE 4: THE CODE FORGE (Compiler / Transpiler)
 internal/lexer/lexer.go:3:QUEST STAGE 1: THE LEXICAL CONDUIT (Lexer)
 internal/parser/parser.go:3:QUEST STAGE 2: THE STRUCTURAL WEAVER (Parser)
-internal/token/token.go:3:QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)</span></pre></div><div class="terminal"><div class="bar">find QUEST 1 TASKS by unique prefix</div><pre><span class="prompt">$</span> grep -rn "TASK \[LEX-" internal
-<span class="output">internal/lexer/lexer.go:10:  - TASK [LEX-01]: Implement character classification helpers:
-internal/lexer/lexer.go:13:  - TASK [LEX-02]: Implement keyword lookup in identifier() for reserved words
-internal/lexer/lexer.go:204:    // TASK [LEX-02]: Implement keyword matching for reserved words ...
-internal/lexer/lexer.go:245:// TASK [LEX-01]: Implement character classification helpers:
-internal/token/token.go:9:  - TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds ...
-internal/token/token.go:67:    // TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds ...
-internal/token/token.go:99:// TASK [LEX-03]: Add "var": Var and "func": Func to the Keywords map ...</span></pre></div><div class="terminal"><div class="bar">annotated stage checkpoints</div><pre><span class="prompt">$</span> git tag -n99
+internal/token/token.go:3:QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)</span></pre>
+            </div>
+            <div class="terminal">
+              <div class="bar">find QUEST 1 TASKS by unique prefix</div>
+              <pre><span class="terminal-command">grep -rn "TASK \[LEX-" internal</span>
+<span class="output">internal/lexer/lexer.go:14:  - TASK [LEX-01]: Classify digits and identifier-start characters.
+internal/lexer/lexer.go:15:  - TASK [LEX-02]: Emit identifiers, reserved keywords, and boolean literals.
+internal/lexer/lexer.go:233:    // TASK [LEX-02]: Emit the identifier or reserved keyword represented by raw.
+internal/lexer/lexer.go:278:// TASK [LEX-01]: Implement isDigit and isIdentStart using ASCII byte ranges.
+internal/token/token.go:13:  - TASK [LEX-03]: Define and register the var and func keyword kinds.
+internal/token/token.go:70:    // TASK [LEX-03]: Define Var and Func kinds using their Nuru source spellings.
+internal/token/token.go:109:    // TASK [LEX-03]: Register the "var" and "func" spellings here.</span></pre>
+            </div>
+            <div class="terminal">
+              <div class="bar">annotated stage checkpoints</div>
+              <pre><span class="terminal-command">git tag -n99</span>
 <span class="output">0-base          Nuru workshop starter — all QUEST tasks ready
 1-lexer         Nuru lexer QUEST complete — digits, identifiers, and var/func tokens
 2-parser        Nuru parser QUEST complete — branches, variables, functions, calls, and returns
 3-interpreter   Nuru interpreter QUEST complete — environments, branches, and function call frames
-4-compiler      Nuru transpiler QUEST complete — Go code generation</span></pre></div></div>
-<div class="step"><h3>Build and inspect both tools</h3><p>Run these commands from the repository root. Successful builds are silent; the help screens show every supported mode.</p><div class="terminal"><div class="bar">build</div><pre><span class="prompt">$</span> go build -o ./nuru-interpreter ./cmd/nuru-interpreter
-<span class="prompt">$</span> go build -o ./nuru-compiler ./cmd/nuru-compiler
-<span class="output">(no output on success)</span></pre></div><div class="terminal"><div class="bar">interpreter usage</div><pre><span class="prompt">$</span> ./nuru-interpreter --help
-<span class="output">Nuru Interpreter (Workshop Edition)
+4-compiler      Nuru transpiler QUEST complete — Go code generation</span></pre>
+            </div>
+          </div>
+          <div class="step">
+            <h3>Build and inspect both tools</h3>
+            <p>
+              Run these commands from the repository root. Successful builds are
+              silent; the help screens show every supported mode.
+            </p>
+            <div class="terminal">
+              <div class="bar">build</div>
+              <pre><span class="terminal-command">go build -o ./nuru-interpreter ./cmd/nuru-interpreter</span>
+<span class="terminal-command">go build -o ./nuru-compiler ./cmd/nuru-compiler</span>
+<span class="output">(no output on success)</span></pre>
+            </div>
+            <div class="terminal">
+              <div class="bar">interpreter usage</div>
+              <pre><span class="terminal-command">./nuru-interpreter --help</span>
+<span class="output">nuru-interpreter(1)
 
-Usage:
-  nuru-interpreter &lt;file.nuru&gt;         Run file using interpreter (default)
-  nuru-interpreter tokens &lt;file.nuru&gt;  Inspect Lexer token stream
-  nuru-interpreter ast &lt;file.nuru&gt;     Inspect Parser AST tree
-  nuru-interpreter repl                Start interactive REPL
-  nuru-interpreter -h, --help          Show help message</span></pre></div><div class="terminal"><div class="bar">compiler usage</div><pre><span class="prompt">$</span> ./nuru-compiler --help
-<span class="output">Nuru Compiler (Workshop Edition)
+NAME
+    nuru-interpreter - inspect and directly execute Nuru programs
 
-Usage:
-  nuru-compiler [-o binary] &lt;file.nuru&gt;   Compile Nuru program to native executable (default)
-  nuru-compiler tokens &lt;file.nuru&gt;         Inspect Lexer token stream
-  nuru-compiler ast &lt;file.nuru&gt;            Inspect Parser AST tree
-  nuru-compiler transpile [-o out.go] &lt;f&gt; Transpile Nuru program to Go source
-  nuru-compiler -h, --help                 Show help message</span></pre></div></div>
-<div class="callout"><span class="label">How to use the line numbers</span>Every TASK snippet below names its file and the starter-checkpoint line where the replacement begins. Earlier QUESTS modify different files, so the location remains stable when you reach that stage. If your own edits shift it, search for the unique TASK identifier instead.</div><div class="callout danger"><span class="label">Reset and skip commands discard progress</span><code>./savepoint.sh 0</code> resets to the starter; stages 1–4 jump to completed checkpoints. The script deliberately runs <code>git reset --hard</code> and <code>git clean -fd</code>. Commit anything you want to keep first.</div></section></div>
+SYNOPSIS
+    nuru-interpreter
+    nuru-interpreter FILE
+    nuru-interpreter tokens FILE
+    nuru-interpreter ast FILE
+    nuru-interpreter repl
+    nuru-interpreter (-h | --help)
 
-<div class="wrap"><section id="q1" class="divider"><div class="quest-head"><span class="quest-num">QUEST 01 · THE LEXICAL CONDUIT</span><span class="duration">15 minutes</span></div><h2>Teach the lexer names and keywords</h2><p class="lede">A parser cannot reason about a variable until the lexer can distinguish its name from punctuation and reserved words. This stage establishes that vocabulary.</p>
-<div class="tasks">
-<div class="task"><span class="task-id">TASK [LEX-01]</span><h3>Classify digits and identifier characters</h3><p>Replace the two stub helpers below the marker at line 245. An identifier starts with a letter or underscore and may then contain digits.</p><div class="code"><div class="bar"><span>internal/lexer/lexer.go · replace at line 250</span><button class="copy" data-copy="lex-01">Copy</button></div><script type="text/plain" id="lex-01">func isDigit(c byte) bool {
-	return c >= '0' && c <= '9'
-}
+DESCRIPTION
+    Runs a Nuru source file directly. Invoking the interpreter without a file,
+    or with the repl command, starts an interactive read-eval-print loop.
 
-func isIdentStart(c byte) bool {
-	return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
-}</script><pre><code data-source="lex-01" data-start="250"></code></pre></div></div>
-<div class="task"><span class="task-id">TASK [LEX-02]</span><h3>Recognise reserved words</h3><p>Replace the TASK body in <code>identifier()</code>. Preserve Boolean literal values; every other keyword carries <code>nil</code>, while an ordinary name becomes <code>Ident</code>.</p><div class="code"><div class="bar"><span>internal/lexer/lexer.go · replace at line 207</span><button class="copy" data-copy="lex-02">Copy</button></div><script type="text/plain" id="lex-02">if k, ok := token.Keywords[raw]; ok {
-	switch k {
-	case token.True:
-		l.add(k, true)
-	case token.False:
-		l.add(k, false)
-	default:
-		l.add(k, nil)
-	}
-} else {
-	l.add(token.Ident, raw)
-}</script><pre><code data-source="lex-02" data-start="207"></code></pre></div></div>
-<div class="task"><span class="task-id">TASK [LEX-03]</span><h3>Add <code>var</code> and <code>func</code></h3><p>This TASK touches a different file, so its two insertion points are shown separately: first declare the kinds, then register their source spellings.</p><div class="code"><div class="bar"><span>internal/token/token.go · insert at line 67</span><button class="copy" data-copy="lex-03-kinds">Copy</button></div><script type="text/plain" id="lex-03-kinds">	// Feature tokens: Variables & Functions
-	Var  Kind = "var"
-	Func Kind = "func"</script><pre><code data-source="lex-03-kinds" data-start="67"></code></pre></div><div class="code"><div class="bar"><span>internal/token/token.go · insert at line 108</span><button class="copy" data-copy="lex-03-keywords">Copy</button></div><script type="text/plain" id="lex-03-keywords">	"var":  Var,
-	"func": Func,</script><pre><code data-source="lex-03-keywords" data-start="108"></code></pre></div></div>
-</div>
-<div class="terminal"><div class="bar">checkpoint output</div><pre><span class="prompt">$</span> go build -o ./nuru-interpreter ./cmd/nuru-interpreter
-<span class="prompt">$</span> ./nuru-interpreter tokens examples/01-tokens.nuru
+COMMANDS
+    FILE
+        Execute FILE directly.
+
+    tokens FILE, lex FILE
+        Print the tokens produced by the lexer. "lex" is an alias for "tokens".
+
+    ast FILE, parse FILE
+        Print the syntax tree produced by the parser. "parse" is an alias for
+        "ast".
+
+    repl
+        Start the interactive REPL.
+
+    (no arguments)
+        Start the interactive REPL.
+
+OPTIONS
+    -h, --help
+        Print this help page and exit.</span></pre>
+            </div>
+            <div class="terminal">
+              <div class="bar">compiler usage</div>
+              <pre><span class="terminal-command">./nuru-compiler --help</span>
+<span class="output">nuru-compiler(1)
+
+NAME
+    nuru-compiler - inspect, transpile, and build Nuru programs
+
+SYNOPSIS
+    nuru-compiler [-o BINARY] FILE
+    nuru-compiler tokens FILE
+    nuru-compiler ast FILE
+    nuru-compiler transpile [-o GO-FILE] FILE
+    nuru-compiler (-h | --help)
+
+DESCRIPTION
+    Compiles a Nuru source file to a native executable by default. The same
+    command can expose intermediate compiler stages or emit Go source.
+
+COMMANDS
+    FILE
+        Build FILE as a native executable. This is the default operation.
+
+    tokens FILE, lex FILE
+        Print the tokens produced by the lexer. "lex" is an alias for "tokens".
+
+    ast FILE, parse FILE
+        Print the syntax tree produced by the parser. "parse" is an alias for
+        "ast".
+
+    transpile [-o GO-FILE] FILE
+        Write generated Go source. The default output is &lt;input-basename&gt;.go.
+
+OPTIONS
+    -o PATH
+        Set the generated Go file or executable path. The default executable is
+        ./nuru.out.
+
+    -h, --help
+        Print this help page and exit.</span></pre>
+            </div>
+          </div>
+          <div class="callout">
+            <span class="label">
+              <span class="icon icon-info"></span> LINE NUMBERS</span
+            >Every TASK snippet below names its file and the starter-checkpoint
+            line where the replacement begins. Earlier QUESTS modify different
+            files, so the location remains stable when you reach that stage. If
+            your own edits shift it, search for the unique TASK identifier
+            instead.
+          </div>
+          <div class="callout danger">
+            <span class="label"
+              ><span class="icon icon-important"></span> Reset and skip commands
+              discard progress</span
+            ><code>./savepoint.sh 0</code> resets to the starter code for the
+            workshop; stages 1-4 jump to completed checkpoints. The script
+            deliberately runs <code>git reset --hard</code> and
+            <code>git clean -fd</code>. Commit anything you want to keep first.
+          </div>
+        </section>
+      </div>
+
+      <div class="wrap">
+        <section id="q1" class="divider">
+          <div class="quest-head">
+            <span class="quest-num">QUEST 01 · THE LEXICAL CONDUIT</span
+            ><span class="duration">15 minutes</span>
+          </div>
+          <h2>Teach the lexer names and keywords</h2>
+          <p class="lede">
+            A parser cannot reason about a variable until the lexer can
+            distinguish its name from punctuation and reserved words. This stage
+            establishes that vocabulary. The lexer advances through bytes,
+            groups them into lexemes, and emits kinds, literal values, and source
+            spans without deciding program structure.
+          </p>
+          <div class="tasks">
+            <div class="task">
+              <span class="task-id">TASK [LEX-01]</span>
+              <h3>Classify digits and identifier characters</h3>
+              <p>
+                Replace <code>isDigit</code> and <code>isIdentStart</code> at
+                starter line 281. Use ASCII byte ranges; an identifier starts
+                with a letter or underscore and may then contain digits.
+              </p>
+              <div class="code" data-solution="lex-01"></div>
+            </div>
+            <div class="task">
+              <span class="task-id">TASK [LEX-02]</span>
+              <h3>Recognise reserved words</h3>
+              <p>
+                Replace <code>identifier</code> at starter line 227. Use
+                <code>token.Keywords</code> and <code>l.add</code>, preserving
+                <code>true</code> and <code>false</code> as boolean literals.
+              </p>
+              <div class="code" data-solution="lex-02"></div>
+            </div>
+            <div class="task">
+              <span class="task-id">TASK [LEX-03]</span>
+              <h3>Add <code>var</code> and <code>func</code></h3>
+              <p>
+                This TASK touches a different file, so its two insertion points
+                are shown separately: first declare the kinds, then register
+                their source spellings.
+              </p>
+              <div class="code" data-solution="lex-03-kinds"></div>
+              <div class="code" data-solution="lex-03-keywords"></div>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="bar">checkpoint output</div>
+            <pre><span class="terminal-command">go build -o ./nuru-interpreter ./cmd/nuru-interpreter</span>
+<span class="terminal-command">./nuru-interpreter tokens examples/01-tokens.nuru</span>
 <span class="output">POSITION     KIND       LITERAL      LEXEME
 ---------------------------------------------------------
 1:1          var                     var
@@ -108,108 +1137,90 @@ func isIdentStart(c byte) bool {
 1:9          INT        10           10
 2:1          if                      if
 …
-5:1          EOF</span></pre></div><div class="callout"><span class="label">Why this matters</span>Every later TASK depends on stable token kinds and literal values. If this table is wrong, the AST will be wrong in a much less obvious place.</div></section></div>
+5:1          EOF</span></pre>
+          </div>
+          <div class="callout">
+            <span class="label"
+              ><span class="icon icon-info"></span> Why this matters</span
+            >Every later TASK depends on stable token kinds and literal values.
+            If this table is wrong, the AST will be wrong in a much less obvious
+            place.
+          </div>
+        </section>
+      </div>
 
-<div class="wrap"><section id="q2" class="divider"><div class="quest-head"><span class="quest-num">QUEST 02 · THE STRUCTURAL WEAVER</span><span class="duration">15 minutes</span></div><h2>Turn tokens into program structure</h2><p class="lede">The parser records what the program means structurally: declarations live at the top level, statements form blocks, and expressions become nested AST nodes.</p>
-<div class="callout warn"><span class="label">Tour, not a TASK</span>Nuru uses a handwritten recursive-descent parser. Its expression functions form a precedence ladder—logical OR down through unary and primary—so multiplication nests more tightly than addition. A Pratt parser solves the same operator-precedence problem with parse-function tables and binding powers, but you will inspect that idea rather than implement it here. Keyword recognition already happened in the lexer.</div>
-<div class="tasks">
-<div class="task"><span class="task-id">TASK [PARSE-01]</span><h3>Parse branches</h3><p>Replace the stub at line 167. Read the condition and required block, then attach an optional <code>else</code> block or chained <code>else if</code>.</p><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 167</span><button class="copy" data-copy="parse-01">Copy</button></div><script type="text/plain" id="parse-01">func (p *Parser) parseIfStmt() ast.Stmt {
-	start := p.previous()
-	cond := p.expression()
-	p.consume(token.LBrace, "expected '{' after if condition")
-	thenBranch := p.parseBlockStmt()
+      <div class="wrap">
+        <section id="q2" class="divider">
+          <div class="quest-head">
+            <span class="quest-num">QUEST 02 · THE STRUCTURAL WEAVER</span
+            ><span class="duration">15 minutes</span>
+          </div>
+          <h2>Turn tokens into program structure</h2>
+          <p class="lede">
+            The parser records what the program means structurally: declarations
+            live at the top level, statements form blocks, and expressions
+            become nested AST nodes. It consumes tokens but does not execute the
+            tree; both backends receive the same result.
+          </p>
+          <div class="callout warn">
+            <span class="label">Tour, not a TASK</span>Nuru uses a handwritten
+            recursive-descent parser. Its expression functions form a precedence
+            ladder—logical OR down through unary and primary—so multiplication
+            nests more tightly than addition. A Pratt parser solves the same
+            operator-precedence problem with parse-function tables and binding
+            powers, but you will inspect that idea rather than implement it
+            here. Keyword recognition already happened in the lexer.
+          </div>
+          <div class="tasks">
+            <div class="task">
+              <span class="task-id">TASK [PARSE-01]</span>
+              <h3>Parse branches</h3>
+              <p>
+                Replace <code>parseIfStmt</code> at starter line 178. It consumes
+                its own <code>if</code>, reads a required block, and recursively
+                attaches an optional <code>else if</code> or else block.
+              </p>
+              <div class="code" data-solution="parse-01"></div>
+            </div>
 
-	var elseBranch ast.Stmt
-	if p.match(token.Else) {
-		if p.match(token.If) {
-			elseBranch = p.parseIfStmt()
-		} else if p.match(token.LBrace) {
-			elseBranch = p.parseBlockStmt()
-		} else {
-			p.error("expected '{' or 'if' after 'else'")
-		}
-	}
+            <div class="task">
+              <span class="task-id">TASK [PARSE-02]</span>
+              <h3>Parse variables and assignment</h3>
+              <p>
+                Replace <code>parseVarDecl</code> at starter line 164 and
+                <code>parseAssignStmt</code> at line 191. Each parser consumes
+                its complete syntax and records a span through the value.
+              </p>
+              <div class="code" data-solution="parse-02-decl"></div>
+              <div class="code" data-solution="parse-02-assign"></div>
+            </div>
 
-	span := start.Span
-	if elseBranch != nil {
-		span = mergeSpan(start.Span, elseBranch.GetSpan())
-	} else if thenBranch != nil {
-		span = mergeSpan(start.Span, thenBranch.GetSpan())
-	}
-	return &ast.IfStmt{Base: ast.Base{Span: span}, Cond: cond, Then: thenBranch, Else: elseBranch}
-}</script><pre><code data-source="parse-01" data-start="167"></code></pre></div></div>
+            <div class="task">
+              <span class="task-id">TASK [PARSE-03]</span>
+              <h3>Parse functions, calls, and returns</h3>
+              <p>
+                Complete the three function-related stubs. Parameters and
+                arguments are comma-separated; function bodies are ordinary
+                blocks.
+              </p>
+              <div class="code" data-solution="parse-03-func"></div>
+              <div class="code" data-solution="parse-03-return"></div>
+              <div class="code" data-solution="parse-03-call"></div>
+            </div>
 
-<div class="task"><span class="task-id">TASK [PARSE-02]</span><h3>Parse variables and assignment</h3><p>This TASK has three non-contiguous stubs in the same file. Replace each at its labelled line.</p><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 111</span><button class="copy" data-copy="parse-02-decl">Copy</button></div><script type="text/plain" id="parse-02-decl">func (p *Parser) parseVarDecl() *ast.VarDecl {
-	p.consume(token.Var, "expected 'var'")
-	return p.parseVarDeclAfterKeyword()
-}</script><pre><code data-source="parse-02-decl" data-start="111"></code></pre></div><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 159</span><button class="copy" data-copy="parse-02-after">Copy</button></div><script type="text/plain" id="parse-02-after">func (p *Parser) parseVarDeclAfterKeyword() *ast.VarDecl {
-	start := p.previous()
-	nameTok := p.consume(token.Ident, "expected variable name after 'var'")
-	p.consume(token.Assign, "expected '=' after variable name")
-	init := p.expression()
-	p.match(token.Semicolon)
-
-	endSpan := start.Span
-	if init != nil { endSpan = mergeSpan(start.Span, init.GetSpan()) }
-	return &ast.VarDecl{Base: ast.Base{Span: endSpan}, Name: nameTok.Lexeme, Init: init}
-}</script><pre><code data-source="parse-02-after" data-start="159"></code></pre></div><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 175</span><button class="copy" data-copy="parse-02-assign">Copy</button></div><script type="text/plain" id="parse-02-assign">func (p *Parser) parseAssignStmt() ast.Stmt {
-	nameTok := p.consume(token.Ident, "expected variable name")
-	p.consume(token.Assign, "expected '='")
-	value := p.expression()
-	p.match(token.Semicolon)
-
-	endSpan := nameTok.Span
-	if value != nil { endSpan = mergeSpan(nameTok.Span, value.GetSpan()) }
-	return &ast.AssignStmt{Base: ast.Base{Span: endSpan}, Name: nameTok.Lexeme, Value: value}
-}</script><pre><code data-source="parse-02-assign" data-start="175"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [PARSE-03]</span><h3>Parse functions, calls, and returns</h3><p>Complete the three function-related stubs. Parameters and arguments are comma-separated; function bodies are ordinary blocks.</p><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 102</span><button class="copy" data-copy="parse-03-func">Copy</button></div><script type="text/plain" id="parse-03-func">func (p *Parser) parseFuncDecl() ast.Decl {
-	start := p.consume(token.Func, "expected 'func'")
-	nameTok := p.consume(token.Ident, "expected function name")
-	p.consume(token.LParen, "expected '(' after function name")
-
-	var params []string
-	if !p.check(token.RParen) {
-		for {
-			param := p.consume(token.Ident, "expected parameter name")
-			params = append(params, param.Lexeme)
-			if !p.match(token.Comma) { break }
-		}
-	}
-	p.consume(token.RParen, "expected ')' after parameters")
-	p.consume(token.LBrace, "expected '{' before function body")
-	body := p.parseBlockStmt()
-	return &ast.FuncDecl{Base: ast.Base{Span: mergeSpan(start.Span, body.GetSpan())}, Name: nameTok.Lexeme, Params: params, Body: body}
-}</script><pre><code data-source="parse-03-func" data-start="102"></code></pre></div><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 185</span><button class="copy" data-copy="parse-03-return">Copy</button></div><script type="text/plain" id="parse-03-return">func (p *Parser) parseReturnStmt() ast.Stmt {
-	start := p.advance()
-	var value ast.Expr
-	if !p.check(token.RBrace) && !p.check(token.Semicolon) && !p.atEnd() {
-		value = p.expression()
-	}
-	p.match(token.Semicolon)
-	span := start.Span
-	if value != nil { span = mergeSpan(start.Span, value.GetSpan()) }
-	return &ast.ReturnStmt{Base: ast.Base{Span: span}, Value: value}
-}</script><pre><code data-source="parse-03-return" data-start="185"></code></pre></div><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 345</span><button class="copy" data-copy="parse-03-call">Copy</button></div><script type="text/plain" id="parse-03-call">func (p *Parser) parseCallExpr() ast.Expr {
-	callee := p.consume(token.Ident, "expected function name")
-	p.consume(token.LParen, "expected '('")
-	var args []ast.Expr
-	if !p.check(token.RParen) {
-		for {
-			if arg := p.expression(); arg != nil { args = append(args, arg) }
-			if !p.match(token.Comma) { break }
-		}
-	}
-	end := p.consume(token.RParen, "expected ')' after arguments")
-	return &ast.CallExpr{Base: ast.Base{Span: mergeSpan(callee.Span, end.Span)}, Callee: callee.Lexeme, Args: args}
-}</script><pre><code data-source="parse-03-call" data-start="345"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [PARSE-04]</span><h3>Parse identifier lookups</h3><p>Replace the final identifier stub and preserve both its source span and spelling.</p><div class="code"><div class="bar"><span>internal/parser/parser.go · replace at line 336</span><button class="copy" data-copy="parse-04">Copy</button></div><script type="text/plain" id="parse-04">func (p *Parser) parseIdentExpr() ast.Expr {
-	tok := p.consume(token.Ident, "expected identifier")
-	return &ast.IdentExpr{Base: ast.Base{Span: tok.Span}, Name: tok.Lexeme}
-}</script><pre><code data-source="parse-04" data-start="336"></code></pre></div></div>
-</div>
-<div class="terminal"><div class="bar">checkpoint output</div><pre><span class="prompt">$</span> ./nuru-interpreter ast examples/02-ast.nuru
+            <div class="task">
+              <span class="task-id">TASK [PARSE-04]</span>
+              <h3>Parse identifier lookups</h3>
+              <p>
+                Replace the final identifier stub and preserve both its source
+                span and spelling.
+              </p>
+              <div class="code" data-solution="parse-04"></div>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="bar">checkpoint output</div>
+            <pre><span class="terminal-command">./nuru-interpreter ast examples/02-ast.nuru</span>
 <span class="output">Program
   FuncDecl: max(a, b)
     BlockStmt:
@@ -229,70 +1240,571 @@ func isIdentStart(c byte) bool {
       Literal: 10
       Literal: 20
   PrintStmt:
-    Ident: res</span></pre></div></section></div>
+    Ident: res</span></pre>
+          </div>
+        </section>
+      </div>
 
-<div class="wrap"><section id="q3" class="divider"><div class="quest-head"><span class="quest-num">QUEST 03 · THE LIVING ENGINE</span><span class="duration">15 minutes</span></div><h2>Walk the AST and produce values</h2><p class="lede">Parsing explains the program; interpretation makes it run. Environments connect identifier names to values, while a fresh frame isolates every function call.</p>
-<div class="tasks">
-<div class="task"><span class="task-id">TASK [EVAL-01]</span><h3>Choose a branch</h3><p>Replace the branch stub, evaluate the condition once, and execute at most one branch.</p><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 218</span><button class="copy" data-copy="eval-01">Copy</button></div><script type="text/plain" id="eval-01">func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
-	condVal := in.evalExpr(s.Cond, env)
-	if isTruthy(condVal) {
+      <div class="wrap">
+        <section id="q3" class="divider">
+          <div class="quest-head">
+            <span class="quest-num">QUEST 03 · THE LIVING ENGINE</span
+            ><span class="duration">15 minutes</span>
+          </div>
+          <h2>Walk the AST and produce values</h2>
+          <p class="lede">
+            Parsing explains the program; interpretation makes it run.
+            Environments connect identifier names to values, while a fresh frame
+            isolates every function call. The interpreter walks nodes directly
+            and produces values without generating another language.
+          </p>
+          <div class="tasks">
+            <div class="task">
+              <span class="task-id">TASK [EVAL-01]</span>
+              <h3>Choose a branch</h3>
+              <p>
+                Replace <code>evalIfStmt</code> at starter line 236. Evaluate
+                the condition once and execute at most one branch.
+              </p>
+              <div class="code" data-solution="eval-01"></div>
+            </div>
+
+            <div class="task">
+              <span class="task-id">TASK [EVAL-02]</span>
+              <h3>Store, update, and retrieve variables</h3>
+              <p>
+                Replace <code>evalVarDecl</code> at starter line 151,
+                <code>evalAssignStmt</code> at line 246, and
+                <code>evalIdentExpr</code> at line 373. Declarations define in
+                the current environment; assignment and lookup walk outward.
+              </p>
+              <div class="code" data-solution="eval-02-decl"></div>
+              <div class="code" data-solution="eval-02-assign"></div>
+              <div class="code" data-solution="eval-02-ident"></div>
+            </div>
+
+            <div class="task">
+              <span class="task-id">TASK [EVAL-03]</span>
+              <h3>Register and call functions</h3>
+              <p>
+                Replace <code>evalFuncDecl</code> at starter line 142,
+                <code>evalReturnStmt</code> at line 256, and
+                <code>evalCallExpr</code> at line 385. Calls validate arity,
+                evaluate arguments in the caller, and bind a fresh frame.
+              </p>
+              <div class="code" data-solution="eval-03-decl"></div>
+              <div class="code" data-solution="eval-03-return"></div>
+              <div class="code" data-solution="eval-03-call"></div>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="bar">checkpoint output</div>
+            <pre><span class="terminal-command">./nuru-interpreter examples/03-interpreter.nuru</span>
+<span class="output">Factorial of 5: 120</span></pre>
+          </div>
+          <div class="callout">
+            <span class="label">The bigger picture</span>The environment is the
+            bridge between syntax and runtime state. This workshop uses only
+            global bindings plus function call frames; functions are not values
+            and do not capture defining scopes.
+          </div>
+        </section>
+      </div>
+
+      <div class="wrap">
+        <section id="q4" class="divider">
+          <div class="quest-head">
+            <span class="quest-num">QUEST 04 · THE CODE FORGE</span
+            ><span class="duration">15 minutes</span>
+          </div>
+          <h2>Transpile the same AST into Go</h2>
+          <p class="lede">
+            The second execution route is intentionally familiar: emit readable
+            Go, let <code>go build</code> perform native compilation, and reuse
+            small generated helpers to preserve Nuru’s dynamic operations. The
+            transpiler consumes the same AST as the interpreter.
+          </p>
+          <div class="tasks">
+            <div class="task">
+              <span class="task-id">TASK [GEN-01]</span>
+              <h3>Generate branches</h3>
+              <p>
+                Replace <code>compileIfStmt</code> at starter line 170. The
+                generated condition passes through <code>nuruTruthy</code>
+                because Nuru values remain dynamically typed in Go.
+              </p>
+              <div class="code" data-solution="gen-01"></div>
+            </div>
+
+            <div class="task">
+              <span class="task-id">TASK [GEN-02]</span>
+              <h3>Generate variables and identifiers</h3>
+              <p>
+                Replace <code>compileVarDecl</code> at starter line 100,
+                <code>compileAssignStmt</code> at line 178, and
+                <code>compileIdentExpr</code> at line 236. Declarations retain
+                <code>any</code> so runtime helpers preserve Nuru operations.
+              </p>
+              <div class="code" data-solution="gen-02-decl"></div>
+              <div class="code" data-solution="gen-02-assign"></div>
+              <div class="code" data-solution="gen-02-ident"></div>
+            </div>
+
+            <div class="task">
+              <span class="task-id">TASK [GEN-03]</span>
+              <h3>Generate functions, calls, and returns</h3>
+              <p>
+                Replace <code>compileFuncDecl</code> at starter line 90,
+                <code>compileReturnStmt</code> at line 187, and
+                <code>compileCallExpr</code> at line 244. Parameters and results
+                use <code>any</code>; a bare Nuru return becomes Go nil.
+              </p>
+              <div class="code" data-solution="gen-03-func"></div>
+              <div class="code" data-solution="gen-03-return"></div>
+              <div class="code" data-solution="gen-03-call"></div>
+            </div>
+          </div>
+          <div class="terminal">
+            <div class="bar">transpiled program · focused excerpt</div>
+            <pre><span class="terminal-command">./nuru-compiler transpile examples/04-compiled.nuru</span>
+<span class="output">func fib(n any) any {
+	if nuruTruthy(nuruBinary("&lt;=", n, 1)) {
+		return n
+	}
+	return nuruBinary("+", fib(nuruBinary("-", n, 1)), fib(nuruBinary("-", n, 2)))
+}
+
+func main() {
+	var ans any = fib(10)
+	fmt.Println("Fibonacci of 10:", ans)
+}</span></pre>
+          </div>
+          <div class="terminal">
+            <div class="bar">native build and run</div>
+            <pre><span class="terminal-command">./nuru-compiler -o ./04-compiled examples/04-compiled.nuru</span>
+<span class="output">Transpiled Go code written to /tmp/nuru-build-…/main.go
+Compiled binary output written to ./04-compiled</span>
+<span class="terminal-command">./04-compiled</span>
+<span class="output">Fibonacci of 10: 55</span></pre>
+          </div>
+          <div class="callout">
+            <span class="label">What “compiler” means here</span
+            ><code>nuru-compiler</code> is a source-to-source compiler—a
+            transpiler. It does not define bytecode, a VM, assembly, or an
+            instruction set. Go provides those later layers so this QUEST stays
+            focused on AST-to-code translation.
+          </div>
+        </section>
+      </div>
+
+      <div class="wrap">
+        <section id="takeaways" class="divider">
+          <div class="eyebrow">After the workshop · optional assignments</div>
+          <h2>Keep the QUEST going</h2>
+          <p class="lede">
+            These deliberately have no revealed solutions. Use the completed
+            scaffold, then compare your design with the fuller Nuru reference
+            and its roadmap.
+          </p>
+          <div class="grid">
+            <div class="card takeaway">
+              <small>Trail 1 · confidence</small>
+              <h3>Differential execution</h3>
+              <p>
+                Run the same <code>.nuru</code> program through the interpreter
+                and transpiled binary, then compare output and failures. Add
+                fuzz cases for lexer/parser boundaries.
+              </p>
+            </div>
+            <div class="card takeaway">
+              <small>Trail 2 · static semantics</small>
+              <h3>Add types and a checker</h3>
+              <p>
+                Evolve <code>var total = 1</code> toward the reference syntax
+                <code>var total int = 1</code>. Resolve symbols and reject
+                invalid operators before either backend runs.
+              </p>
+            </div>
+            <div class="card takeaway">
+              <small>Trail 3 · useful data</small>
+              <h3>Collections and structs</h3>
+              <p>
+                Add slices, maps, named structs, indexing, and field access.
+                Decide how each value behaves in both the interpreter and
+                generated Go.
+              </p>
+            </div>
+            <div class="card takeaway">
+              <small>Trail 4 · bootstrap readiness</small>
+              <h3>Read and analyse Nuru source</h3>
+              <p>
+                Add <code>args</code>, <code>readFile</code>, and
+                <code>writeFile</code>, then write a Nuru program that tokenises
+                or analyses another <code>.nuru</code> file.
+              </p>
+            </div>
+            <div class="card takeaway">
+              <small>Trail 5 · self-hosting</small>
+              <h3>Write Nuru in Nuru</h3>
+              <p>
+                Port the front end one package at a time, preserve deterministic
+                output, and use the Go seed compiler to compile each generation
+                until Nuru can rebuild itself.
+              </p>
+            </div>
+            <div class="card takeaway">
+              <small>Trail 6 · ecosystem</small>
+              <h3>Choose a roadmap milestone</h3>
+              <p>
+                Prototype modules, a formatter, an LSP, an intermediate
+                representation, or a later LLVM/native backend. Define one small
+                acceptance program before coding.
+              </p>
+            </div>
+          </div>
+          <div class="callout">
+            <span class="label">Reference trail markers</span>On the
+            <code>lugha</code> branch, study
+            <a
+              href="https://github.com/kc-clintone/compilers/blob/lugha/docs/language.md"
+              >the Nuru language reference</a
+            >,
+            <a
+              href="https://github.com/kc-clintone/compilers/blob/lugha/docs/ROADMAP.md"
+              >the evolution roadmap</a
+            >, and
+            <a
+              href="https://github.com/kc-clintone/compilers/blob/lugha/docs/teaching-guide.md"
+              >the guided reference walkthrough</a
+            >. For parsing background, compare the repository’s precedence
+            ladder with Bob Nystrom’s free
+            <a href="https://craftinginterpreters.com/parsing-expressions.html"
+              >Parsing Expressions</a
+            >
+            chapter.
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <footer>
+      <div class="wrap">
+        Built for Go developers who are ready to navigate real code, regardless
+        of tenure. Four focused QUESTS; one small language; two execution paths.
+      </div>
+    </footer>
+    <script>
+      (function () {
+        "use strict";
+        var solutions = {
+          "lex-01": {
+            path: "internal/lexer/lexer.go",
+            start: 281,
+            source: String.raw`func isDigit(c byte) bool {
+	return c >= '0' && c <= '9'
+}
+
+func isIdentStart(c byte) bool {
+	return c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z')
+}`,
+          },
+          "lex-02": {
+            path: "internal/lexer/lexer.go",
+            start: 227,
+            source: String.raw`func (l *Lexer) identifier() {
+	for isIdentPart(l.peek()) {
+		l.advance()
+	}
+	raw := string(l.src[l.start:l.current])
+
+	if kind, ok := token.Keywords[raw]; ok {
+		switch kind {
+		case token.True:
+			l.add(kind, true)
+		case token.False:
+			l.add(kind, false)
+		default:
+			l.add(kind, nil)
+		}
+		return
+	}
+	l.add(token.Ident, raw)
+}`,
+          },
+          "lex-03-kinds": {
+            path: "internal/token/token.go",
+            action: "insert",
+            start: 70,
+            source: String.raw`Var  Kind = "var"
+Func Kind = "func"`,
+          },
+          "lex-03-keywords": {
+            path: "internal/token/token.go",
+            action: "insert",
+            start: 109,
+            source: String.raw`"var":  Var,
+"func": Func,`,
+          },
+          "parse-01": {
+            path: "internal/parser/parser.go",
+            start: 178,
+            source: String.raw`func (p *Parser) parseIfStmt() ast.Stmt {
+	start := p.consume(token.If, "expected 'if'")
+	cond := p.expression()
+	p.consume(token.LBrace, "expected '{' after if condition")
+	thenBranch := p.parseBlockStmt()
+
+	var elseBranch ast.Stmt
+	if p.match(token.Else) {
+		if p.check(token.If) {
+			elseBranch = p.parseIfStmt()
+		} else if p.match(token.LBrace) {
+			elseBranch = p.parseBlockStmt()
+		} else {
+			p.error("expected '{' or 'if' after 'else'")
+		}
+	}
+
+	span := mergeSpan(start.Span, thenBranch.GetSpan())
+	if elseBranch != nil {
+		span = mergeSpan(start.Span, elseBranch.GetSpan())
+	}
+	return &ast.IfStmt{
+		Base: ast.Base{Span: span},
+		Cond: cond,
+		Then: thenBranch,
+		Else: elseBranch,
+	}
+}`,
+          },
+          "parse-02-decl": {
+            path: "internal/parser/parser.go",
+            start: 164,
+            source: String.raw`func (p *Parser) parseVarDecl() *ast.VarDecl {
+	start := p.consume(token.Var, "expected 'var'")
+	name := p.consume(token.Ident, "expected variable name after 'var'")
+	p.consume(token.Assign, "expected '=' after variable name")
+	init := p.expression()
+	p.match(token.Semicolon)
+
+	span := start.Span
+	if init != nil {
+		span = mergeSpan(start.Span, init.GetSpan())
+	}
+	return &ast.VarDecl{
+		Base: ast.Base{Span: span},
+		Name: name.Lexeme,
+		Init: init,
+	}
+}`,
+          },
+          "parse-02-assign": {
+            path: "internal/parser/parser.go",
+            start: 191,
+            source: String.raw`func (p *Parser) parseAssignStmt() ast.Stmt {
+	name := p.consume(token.Ident, "expected variable name")
+	p.consume(token.Assign, "expected '='")
+	value := p.expression()
+	p.match(token.Semicolon)
+
+	span := name.Span
+	if value != nil {
+		span = mergeSpan(name.Span, value.GetSpan())
+	}
+	return &ast.AssignStmt{
+		Base:  ast.Base{Span: span},
+		Name:  name.Lexeme,
+		Value: value,
+	}
+}`,
+          },
+          "parse-03-func": {
+            path: "internal/parser/parser.go",
+            start: 108,
+            source: String.raw`func (p *Parser) parseFuncDecl() ast.Decl {
+	start := p.consume(token.Func, "expected 'func'")
+	name := p.consume(token.Ident, "expected function name")
+	p.consume(token.LParen, "expected '(' after function name")
+
+	var params []string
+	if !p.check(token.RParen) {
+		for {
+			param := p.consume(token.Ident, "expected parameter name")
+			params = append(params, param.Lexeme)
+			if !p.match(token.Comma) {
+				break
+			}
+		}
+	}
+	p.consume(token.RParen, "expected ')' after parameters")
+	p.consume(token.LBrace, "expected '{' before function body")
+	body := p.parseBlockStmt()
+
+	return &ast.FuncDecl{
+		Base:   ast.Base{Span: mergeSpan(start.Span, body.GetSpan())},
+		Name:   name.Lexeme,
+		Params: params,
+		Body:   body,
+	}
+}`,
+          },
+          "parse-03-return": {
+            path: "internal/parser/parser.go",
+            start: 205,
+            source: String.raw`func (p *Parser) parseReturnStmt() ast.Stmt {
+	start := p.advance()
+	var value ast.Expr
+	if !p.check(token.RBrace) && !p.check(token.Semicolon) && !p.atEnd() {
+		value = p.expression()
+	}
+	p.match(token.Semicolon)
+
+	span := start.Span
+	if value != nil {
+		span = mergeSpan(start.Span, value.GetSpan())
+	}
+	return &ast.ReturnStmt{Base: ast.Base{Span: span}, Value: value}
+}`,
+          },
+          "parse-03-call": {
+            path: "internal/parser/parser.go",
+            start: 385,
+            source: String.raw`func (p *Parser) parseCallExpr() ast.Expr {
+	callee := p.consume(token.Ident, "expected function name")
+	p.consume(token.LParen, "expected '('")
+
+	var args []ast.Expr
+	if !p.check(token.RParen) {
+		for {
+			if arg := p.expression(); arg != nil {
+				args = append(args, arg)
+			}
+			if !p.match(token.Comma) {
+				break
+			}
+		}
+	}
+	end := p.consume(token.RParen, "expected ')' after arguments")
+	return &ast.CallExpr{
+		Base:   ast.Base{Span: mergeSpan(callee.Span, end.Span)},
+		Callee: callee.Lexeme,
+		Args:   args,
+	}
+}`,
+          },
+          "parse-04": {
+            path: "internal/parser/parser.go",
+            start: 372,
+            source: String.raw`func (p *Parser) parseIdentExpr() ast.Expr {
+	tok := p.consume(token.Ident, "expected identifier")
+	return &ast.IdentExpr{
+		Base: ast.Base{Span: tok.Span},
+		Name: tok.Lexeme,
+	}
+}`,
+          },
+          "eval-01": {
+            path: "internal/interpreter/interpreter.go",
+            start: 236,
+            source: String.raw`func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
+	condition := in.evalExpr(s.Cond, env)
+	if isTruthy(condition) {
 		return in.evalStmt(s.Then, env)
-	} else if s.Else != nil {
+	}
+	if s.Else != nil {
 		return in.evalStmt(s.Else, env)
 	}
 	return nil
-}</script><pre><code data-source="eval-01" data-start="218"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [EVAL-02]</span><h3>Store, update, and retrieve variables</h3><p>Complete all three variable operations. Declarations define in the current environment, assignment walks outward, and lookup reports an unknown name.</p><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 137</span><button class="copy" data-copy="eval-02-decl">Copy</button></div><script type="text/plain" id="eval-02-decl">func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
+}`,
+          },
+          "eval-02-decl": {
+            path: "internal/interpreter/interpreter.go",
+            start: 151,
+            source: String.raw`func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
 	var value any
-	if d.Init != nil { value = in.evalExpr(d.Init, env) }
+	if d.Init != nil {
+		value = in.evalExpr(d.Init, env)
+	}
 	env.Define(d.Name, value)
-}</script><pre><code data-source="eval-02-decl" data-start="137"></code></pre></div><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 225</span><button class="copy" data-copy="eval-02-assign">Copy</button></div><script type="text/plain" id="eval-02-assign">func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
+}`,
+          },
+          "eval-02-assign": {
+            path: "internal/interpreter/interpreter.go",
+            start: 246,
+            source: String.raw`func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
 	value := in.evalExpr(s.Value, env)
 	if !env.Set(s.Name, value) {
-		in.error(s.GetSpan(), fmt.Sprintf("cannot assign to undefined variable '%s'", s.Name))
+		in.error(s.GetSpan(), fmt.Sprintf(
+			"cannot assign to undefined variable '%s'", s.Name,
+		))
 	}
 	return nil
-}</script><pre><code data-source="eval-02-assign" data-start="225"></code></pre></div><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 344</span><button class="copy" data-copy="eval-02-ident">Copy</button></div><script type="text/plain" id="eval-02-ident">func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
+}`,
+          },
+          "eval-02-ident": {
+            path: "internal/interpreter/interpreter.go",
+            start: 373,
+            source: String.raw`func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
 	value, ok := env.Get(e.Name)
 	if !ok {
 		in.error(e.GetSpan(), fmt.Sprintf("undefined variable '%s'", e.Name))
 		return nil
 	}
 	return value
-}</script><pre><code data-source="eval-02-ident" data-start="344"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [EVAL-03]</span><h3>Register and call functions</h3><p>Complete registration, return propagation, and invocation. Calls validate arity, evaluate arguments in the caller, and bind them in a fresh frame whose parent is global state.</p><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 130</span><button class="copy" data-copy="eval-03-decl">Copy</button></div><script type="text/plain" id="eval-03-decl">func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
+}`,
+          },
+          "eval-03-decl": {
+            path: "internal/interpreter/interpreter.go",
+            start: 142,
+            source: String.raw`func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
 	in.funcs[d.Name] = &UserFunction{Decl: d}
-}</script><pre><code data-source="eval-03-decl" data-start="130"></code></pre></div><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 232</span><button class="copy" data-copy="eval-03-return">Copy</button></div><script type="text/plain" id="eval-03-return">func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
+}`,
+          },
+          "eval-03-return": {
+            path: "internal/interpreter/interpreter.go",
+            start: 256,
+            source: String.raw`func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
 	var value any
-	if s.Value != nil { value = in.evalExpr(s.Value, env) }
+	if s.Value != nil {
+		value = in.evalExpr(s.Value, env)
+	}
 	return ReturnVal{Value: value}
-}</script><pre><code data-source="eval-03-return" data-start="232"></code></pre></div><div class="code"><div class="bar"><span>internal/interpreter/interpreter.go · replace at line 352</span><button class="copy" data-copy="eval-03-call">Copy</button></div><script type="text/plain" id="eval-03-call">func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
-	fn, ok := in.funcs[e.Callee]
+}`,
+          },
+          "eval-03-call": {
+            path: "internal/interpreter/interpreter.go",
+            start: 385,
+            source: String.raw`func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
+	function, ok := in.funcs[e.Callee]
 	if !ok {
 		in.error(e.GetSpan(), fmt.Sprintf("undefined function '%s'", e.Callee))
 		return nil
 	}
-	if len(e.Args) != len(fn.Decl.Params) {
-		in.error(e.GetSpan(), fmt.Sprintf("function '%s' expects %d arguments, got %d", e.Callee, len(fn.Decl.Params), len(e.Args)))
+	if len(e.Args) != len(function.Decl.Params) {
+		in.error(e.GetSpan(), fmt.Sprintf(
+			"function '%s' expects %d arguments, got %d",
+			e.Callee, len(function.Decl.Params), len(e.Args),
+		))
 		return nil
 	}
-	callEnv := NewEnvironment(in.env)
-	for i, arg := range e.Args {
-		callEnv.Define(fn.Decl.Params[i], in.evalExpr(arg, env))
-	}
-	result := in.evalStmt(fn.Decl.Body, callEnv)
-	if returned, ok := result.(ReturnVal); ok { return returned.Value }
-	return nil
-}</script><pre><code data-source="eval-03-call" data-start="352"></code></pre></div></div>
-</div>
-<div class="terminal"><div class="bar">checkpoint output</div><pre><span class="prompt">$</span> ./nuru-interpreter examples/03-interpreter.nuru
-<span class="output">Factorial of 5: 120</span></pre></div><div class="callout"><span class="label">The bigger picture</span>The environment is the bridge between syntax and runtime state. This workshop uses only global bindings plus function call frames; functions are not values and do not capture defining scopes.</div></section></div>
 
-<div class="wrap"><section id="q4" class="divider"><div class="quest-head"><span class="quest-num">QUEST 04 · THE CODE FORGE</span><span class="duration">15 minutes</span></div><h2>Transpile the same AST into Go</h2><p class="lede">The second execution route is intentionally familiar: emit readable Go, let <code>go build</code> perform native compilation, and reuse small generated helpers to preserve Nuru’s dynamic operations.</p>
-<div class="tasks">
-<div class="task"><span class="task-id">TASK [GEN-01]</span><h3>Generate branches</h3><p>Replace the branch stub. The generated condition passes through <code>nuruTruthy</code> because Nuru values remain dynamically typed in Go.</p><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 153</span><button class="copy" data-copy="gen-01">Copy</button></div><script type="text/plain" id="gen-01">func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
+	callEnv := NewEnvironment(in.env)
+	for index, argument := range e.Args {
+		value := in.evalExpr(argument, env)
+		callEnv.Define(function.Decl.Params[index], value)
+	}
+
+	result := in.evalStmt(function.Decl.Body, callEnv)
+	if returned, ok := result.(ReturnVal); ok {
+		return returned.Value
+	}
+	return nil
+}`,
+          },
+          "gen-01": {
+            path: "internal/compiler/compiler.go",
+            start: 170,
+            source: String.raw`func (c *Compiler) compileIfStmt(s *ast.IfStmt, indent string) {
 	c.emit("%sif nuruTruthy(", indent)
 	c.compileExpr(s.Cond)
 	c.emit(")")
@@ -306,88 +1818,357 @@ func isIdentStart(c byte) bool {
 		}
 	}
 	c.emit("\n")
-}</script><pre><code data-source="gen-01" data-start="153"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [GEN-02]</span><h3>Generate variables and identifiers</h3><p>Replace all three non-contiguous variable stubs. Declarations retain <code>any</code> so generated runtime helpers can preserve Nuru operations.</p><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 89</span><button class="copy" data-copy="gen-02-decl">Copy</button></div><script type="text/plain" id="gen-02-decl">func (c *Compiler) compileVarDecl(d *ast.VarDecl, indent string) {
+}`,
+          },
+          "gen-02-decl": {
+            path: "internal/compiler/compiler.go",
+            start: 100,
+            source: String.raw`func (c *Compiler) compileVarDecl(d *ast.VarDecl, indent string) {
 	c.emit("%svar %s any", indent, d.Name)
 	if d.Init != nil {
 		c.emit(" = ")
 		c.compileExpr(d.Init)
 	}
 	c.emit("\n")
-}</script><pre><code data-source="gen-02-decl" data-start="89"></code></pre></div><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 159</span><button class="copy" data-copy="gen-02-assign">Copy</button></div><script type="text/plain" id="gen-02-assign">func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
+}`,
+          },
+          "gen-02-assign": {
+            path: "internal/compiler/compiler.go",
+            start: 178,
+            source: String.raw`func (c *Compiler) compileAssignStmt(s *ast.AssignStmt, indent string) {
 	c.emit("%s%s = ", indent, s.Name)
 	c.compileExpr(s.Value)
 	c.emit("\n")
-}</script><pre><code data-source="gen-02-assign" data-start="159"></code></pre></div><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 210</span><button class="copy" data-copy="gen-02-ident">Copy</button></div><script type="text/plain" id="gen-02-ident">func (c *Compiler) compileIdentExpr(e *ast.IdentExpr) {
+}`,
+          },
+          "gen-02-ident": {
+            path: "internal/compiler/compiler.go",
+            start: 236,
+            source: String.raw`func (c *Compiler) compileIdentExpr(e *ast.IdentExpr) {
 	c.emit("%s", e.Name)
-}</script><pre><code data-source="gen-02-ident" data-start="210"></code></pre></div></div>
-
-<div class="task"><span class="task-id">TASK [GEN-03]</span><h3>Generate functions, calls, and returns</h3><p>Complete the three function-related emitters. Parameters and results use <code>any</code>; a bare Nuru return becomes Go <code>nil</code>.</p><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 83</span><button class="copy" data-copy="gen-03-func">Copy</button></div><script type="text/plain" id="gen-03-func">func (c *Compiler) compileFuncDecl(d *ast.FuncDecl) {
+}`,
+          },
+          "gen-03-func": {
+            path: "internal/compiler/compiler.go",
+            start: 90,
+            source: String.raw`func (c *Compiler) compileFuncDecl(d *ast.FuncDecl) {
 	c.emit("func %s(", d.Name)
-	for i, param := range d.Params {
-		if i > 0 { c.emit(", ") }
-		c.emit("%s any", param)
+	for index, parameter := range d.Params {
+		if index > 0 {
+			c.emit(", ")
+		}
+		c.emit("%s any", parameter)
 	}
 	c.emit(") any")
 	c.compileStmt(d.Body, "")
 	c.emit("\n\n")
-}</script><pre><code data-source="gen-03-func" data-start="83"></code></pre></div><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 165</span><button class="copy" data-copy="gen-03-return">Copy</button></div><script type="text/plain" id="gen-03-return">func (c *Compiler) compileReturnStmt(s *ast.ReturnStmt, indent string) {
+}`,
+          },
+          "gen-03-return": {
+            path: "internal/compiler/compiler.go",
+            start: 187,
+            source: String.raw`func (c *Compiler) compileReturnStmt(s *ast.ReturnStmt, indent string) {
 	c.emit("%sreturn ", indent)
-	if s.Value != nil { c.compileExpr(s.Value) } else { c.emit("nil") }
+	if s.Value != nil {
+		c.compileExpr(s.Value)
+	} else {
+		c.emit("nil")
+	}
 	c.emit("\n")
-}</script><pre><code data-source="gen-03-return" data-start="165"></code></pre></div><div class="code"><div class="bar"><span>internal/compiler/compiler.go · replace at line 216</span><button class="copy" data-copy="gen-03-call">Copy</button></div><script type="text/plain" id="gen-03-call">func (c *Compiler) compileCallExpr(e *ast.CallExpr) {
+}`,
+          },
+          "gen-03-call": {
+            path: "internal/compiler/compiler.go",
+            start: 244,
+            source: String.raw`func (c *Compiler) compileCallExpr(e *ast.CallExpr) {
 	c.emit("%s(", e.Callee)
-	for i, arg := range e.Args {
-		if i > 0 { c.emit(", ") }
-		c.compileExpr(arg)
+	for index, argument := range e.Args {
+		if index > 0 {
+			c.emit(", ")
+		}
+		c.compileExpr(argument)
 	}
 	c.emit(")")
-}</script><pre><code data-source="gen-03-call" data-start="216"></code></pre></div></div>
-</div>
-<div class="terminal"><div class="bar">transpiled program · focused excerpt</div><pre><span class="prompt">$</span> ./nuru-compiler transpile examples/04-compiled.nuru
-<span class="output">func fib(n any) any {
-	if nuruTruthy(nuruBinary("&lt;=", n, 1)) {
-		return n
-	}
-	return nuruBinary("+", fib(nuruBinary("-", n, 1)), fib(nuruBinary("-", n, 2)))
-}
+}`,
+          },
+        };
+        function esc(value) {
+          return value
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;");
+        }
+        var goKeywords = new Set([
+          "break",
+          "case",
+          "const",
+          "continue",
+          "default",
+          "defer",
+          "else",
+          "fallthrough",
+          "for",
+          "func",
+          "go",
+          "goto",
+          "if",
+          "import",
+          "interface",
+          "map",
+          "package",
+          "range",
+          "return",
+          "select",
+          "struct",
+          "switch",
+          "type",
+          "var",
+        ]);
+        var goTypes = new Set([
+          "any",
+          "bool",
+          "byte",
+          "error",
+          "int",
+          "int64",
+          "rune",
+          "string",
+        ]);
+        function highlight(source) {
+          return esc(source).replace(
+            /(\/\/[^\n]*)|("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\b\d+\b)|([A-Za-z_]\w*)/g,
+            function (all, comment, stringValue, charValue, number, ident) {
+              if (comment)
+                return '<span class="comment">' + comment + "</span>";
+              if (stringValue || charValue)
+                return (
+                  '<span class="str">' + (stringValue || charValue) + "</span>"
+                );
+              if (number) return '<span class="num">' + number + "</span>";
+              if (goKeywords.has(ident))
+                return '<span class="kw">' + ident + "</span>";
+              if (goTypes.has(ident))
+                return '<span style="color:#c99ee8">' + ident + "</span>";
+              return ident || all;
+            }
+          );
+        }
+        document.querySelectorAll("[data-solution]").forEach(function (panel) {
+          var id = panel.dataset.solution;
+          var solution = solutions[id];
+          if (!solution) return;
 
-func main() {
-	var ans any = fib(10)
-	fmt.Println("Fibonacci of 10:", ans)
-}</span></pre></div><div class="terminal"><div class="bar">native build and run</div><pre><span class="prompt">$</span> ./nuru-compiler -o ./04-compiled examples/04-compiled.nuru
-<span class="output">Transpiled Go code written to /tmp/nuru-build-…/main.go
-Compiled binary output written to ./04-compiled</span>
-<span class="prompt">$</span> ./04-compiled
-<span class="output">Fibonacci of 10: 55</span></pre></div><div class="callout"><span class="label">What “compiler” means here</span><code>nuru-compiler</code> is a source-to-source compiler—a transpiler. It does not define bytecode, a VM, assembly, or an instruction set. Go provides those later layers so this QUEST stays focused on AST-to-code translation.</div></section></div>
+          var bar = document.createElement("div");
+          bar.className = "bar";
+          var label = document.createElement("span");
+          label.textContent =
+            solution.path +
+            " · " +
+            (solution.action || "replace") +
+            " at line " +
+            solution.start;
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "copy";
+          button.dataset.copy = id;
+          button.textContent = "Copy";
+          button.setAttribute("aria-label", "Copy solution for " + id);
+          bar.append(label, button);
 
-<div class="wrap"><section id="takeaways" class="divider"><div class="eyebrow">After the workshop · optional assignments</div><h2>Keep the QUEST going</h2><p class="lede">These deliberately have no revealed solutions. Use the completed scaffold, then compare your design with the fuller Nuru reference and its roadmap.</p><div class="grid">
-<div class="card takeaway"><small>Trail 1 · confidence</small><h3>Differential execution</h3><p>Run the same <code>.nuru</code> program through the interpreter and transpiled binary, then compare output and failures. Add fuzz cases for lexer/parser boundaries.</p></div>
-<div class="card takeaway"><small>Trail 2 · static semantics</small><h3>Add types and a checker</h3><p>Evolve <code>var total = 1</code> toward the reference syntax <code>var total int = 1</code>. Resolve symbols and reject invalid operators before either backend runs.</p></div>
-<div class="card takeaway"><small>Trail 3 · useful data</small><h3>Collections and structs</h3><p>Add slices, maps, named structs, indexing, and field access. Decide how each value behaves in both the interpreter and generated Go.</p></div>
-<div class="card takeaway"><small>Trail 4 · bootstrap readiness</small><h3>Read and analyse Nuru source</h3><p>Add <code>args</code>, <code>readFile</code>, and <code>writeFile</code>, then write a Nuru program that tokenises or analyses another <code>.nuru</code> file.</p></div>
-<div class="card takeaway"><small>Trail 5 · self-hosting</small><h3>Write Nuru in Nuru</h3><p>Port the front end one package at a time, preserve deterministic output, and use the Go seed compiler to compile each generation until Nuru can rebuild itself.</p></div>
-<div class="card takeaway"><small>Trail 6 · ecosystem</small><h3>Choose a roadmap milestone</h3><p>Prototype modules, a formatter, an LSP, an intermediate representation, or a later LLVM/native backend. Define one small acceptance program before coding.</p></div>
-</div><div class="callout"><span class="label">Reference trail markers</span>On the <code>lugha</code> branch, study <a href="https://github.com/kc-clintone/compilers/blob/lugha/docs/language.md">the Nuru language reference</a>, <a href="https://github.com/kc-clintone/compilers/blob/lugha/docs/ROADMAP.md">the evolution roadmap</a>, and <a href="https://github.com/kc-clintone/compilers/blob/lugha/docs/teaching-guide.md">the guided reference walkthrough</a>. For parsing background, compare the repository’s precedence ladder with Bob Nystrom’s free <a href="https://craftinginterpreters.com/parsing-expressions.html">Parsing Expressions</a> chapter.</div></section></div>
-</main>
+          var pre = document.createElement("pre");
+          var code = document.createElement("code");
+          var raw = solution.source;
+          code.innerHTML = highlight(raw)
+            .split("\n")
+            .map(function (line, index) {
+              return (
+                '<span class="code-line" data-line="' +
+                (solution.start + index) +
+                '">' +
+                (line || " ") +
+                "</span>"
+              );
+            })
+            .join("");
+          pre.appendChild(code);
+          panel.append(bar, pre);
+        });
+        document.querySelectorAll(".terminal").forEach(function (terminal) {
+          var bar = terminal.querySelector(".bar");
+          if (!bar || !terminal.querySelector(".terminal-command")) return;
 
-<footer><div class="wrap">Built for Go developers who are ready to navigate real code, regardless of tenure. Four focused QUESTS; one small language; two execution paths.</div></footer>
-<script>
-(function(){
-"use strict";
-function esc(value){return value.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")}
-var goKeywords=new Set(["break","case","const","continue","default","defer","else","fallthrough","for","func","go","goto","if","import","interface","map","package","range","return","select","struct","switch","type","var"]);
-var goTypes=new Set(["any","bool","byte","error","int","int64","rune","string"]);
-function highlight(source){return esc(source).replace(/(\/\/[^\n]*)|("(?:[^"\\]|\\.)*")|('(?:[^'\\]|\\.)*')|(\b\d+\b)|([A-Za-z_]\w*)/g,function(all,comment,stringValue,charValue,number,ident){if(comment)return '<span class="comment">'+comment+'</span>';if(stringValue||charValue)return '<span class="str">'+(stringValue||charValue)+'</span>';if(number)return '<span class="num">'+number+'</span>';if(goKeywords.has(ident))return '<span class="kw">'+ident+'</span>';if(goTypes.has(ident))return '<span style="color:#c99ee8">'+ident+'</span>';return ident||all})}
-document.querySelectorAll("code[data-source]").forEach(function(code){var source=document.getElementById(code.dataset.source);if(!source)return;var raw=source.textContent.replace(/^\n|\n$/g,"");var start=parseInt(code.dataset.start||"1",10);code.innerHTML=highlight(raw).split("\n").map(function(line,index){return '<span class="code-line" data-line="'+(start+index)+'">'+(line||" ")+'</span>'}).join("")});
-document.querySelectorAll("button[data-copy]").forEach(function(button){button.addEventListener("click",function(){var source=document.getElementById(button.dataset.copy);if(!source)return;navigator.clipboard.writeText(source.textContent.replace(/^\n|\n$/g,"")).then(function(){button.textContent="Copied";button.classList.add("done");setTimeout(function(){button.textContent="Copy";button.classList.remove("done")},1400)})})});
-var tokenKinds={var:"var",func:"func",if:"if",else:"else",for:"for",break:"break",continue:"continue",true:"true",false:"false"};
-var keywordKinds=new Set(Object.keys(tokenKinds));
-function tokenize(input){var tokens=[],i=0;function start(c){return !!c&&/[A-Za-z_]/.test(c)}function part(c){return !!c&&/[A-Za-z0-9_]/.test(c)}function digit(c){return !!c&&/[0-9]/.test(c)}while(i<input.length){var c=input[i];if(/\s/.test(c)){i++;continue}if(start(c)){var a=i++;while(part(input[i]))i++;var word=input.slice(a,i);tokens.push({kind:tokenKinds[word]||"IDENT",lexeme:word,keyword:keywordKinds.has(word)});continue}if(digit(c)){var n=i++;while(digit(input[i]))i++;tokens.push({kind:"INT",lexeme:input.slice(n,i)});continue}if(c==='"'){var s=i++;while(i<input.length&&input[i]!=='"')i++;if(i<input.length)i++;tokens.push({kind:"STRING",lexeme:input.slice(s,i)});continue}var pair=input.slice(i,i+2);if(["==","!=","<=",">=","&&","||"].includes(pair)){tokens.push({kind:pair,lexeme:pair});i+=2;continue}if("=+-*/%!<>(){},;".includes(c)){tokens.push({kind:c,lexeme:c});i++;continue}tokens.push({kind:"ILLEGAL",lexeme:c});i++}return tokens}
-var input=document.getElementById("token-input"),output=document.getElementById("token-output");function render(){output.innerHTML="";tokenize(input.value).forEach(function(item){var span=document.createElement("span");span.className="token"+(item.keyword?" keyword":"");span.innerHTML="<b>"+esc(item.kind)+"</b><span>"+esc(item.lexeme)+"</span>";output.appendChild(span)})}input.addEventListener("input",render);render();
-var navLinks=Array.from(document.querySelectorAll("nav a"));var observed=navLinks.map(function(a){return document.querySelector(a.getAttribute("href"))}).filter(Boolean);if("IntersectionObserver" in window){var navObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting){navLinks.forEach(function(a){a.classList.toggle("active",a.getAttribute("href")==="#"+entry.target.id)})}})},{rootMargin:"-20% 0px -70% 0px"});observed.forEach(function(section){navObserver.observe(section)});var pipes=Array.from(document.querySelectorAll(".pipe-stage"));var pipeObserver=new IntersectionObserver(function(entries){entries.forEach(function(entry){if(entry.isIntersecting)pipes.forEach(function(pipe){pipe.classList.toggle("active",pipe.dataset.target===entry.target.id)})})},{rootMargin:"-30% 0px -60% 0px"});pipes.forEach(function(pipe){var target=document.getElementById(pipe.dataset.target);if(target)pipeObserver.observe(target)})}
-})();
-</script>
-</body>
+          var button = document.createElement("button");
+          button.type = "button";
+          button.className = "copy";
+          button.textContent = "Copy";
+          button.setAttribute("aria-label", "Copy terminal commands");
+          bar.appendChild(button);
+        });
+        document.querySelectorAll("button.copy").forEach(function (button) {
+          button.addEventListener("click", function () {
+            var text = "";
+            if (button.dataset.copy) {
+              var solution = solutions[button.dataset.copy];
+              if (solution) text = solution.source;
+            } else {
+              var terminal = button.closest(".terminal");
+              if (terminal) {
+                text = Array.from(
+                  terminal.querySelectorAll(".terminal-command")
+                )
+                  .map(function (command) {
+                    return command.textContent.trim();
+                  })
+                  .filter(Boolean)
+                  .join("\n");
+              }
+            }
+            if (!text) return;
+
+            navigator.clipboard.writeText(text).then(function () {
+              button.textContent = "Copied";
+              button.classList.add("done");
+              setTimeout(function () {
+                button.textContent = "Copy";
+                button.classList.remove("done");
+              }, 1400);
+            });
+          });
+        });
+        var tokenKinds = {
+          var: "var",
+          func: "func",
+          if: "if",
+          else: "else",
+          for: "for",
+          break: "break",
+          continue: "continue",
+          true: "true",
+          false: "false",
+        };
+        var keywordKinds = new Set(Object.keys(tokenKinds));
+        function tokenize(input) {
+          var tokens = [],
+            i = 0;
+          function start(c) {
+            return !!c && /[A-Za-z_]/.test(c);
+          }
+          function part(c) {
+            return !!c && /[A-Za-z0-9_]/.test(c);
+          }
+          function digit(c) {
+            return !!c && /[0-9]/.test(c);
+          }
+          while (i < input.length) {
+            var c = input[i];
+            if (/\s/.test(c)) {
+              i++;
+              continue;
+            }
+            if (start(c)) {
+              var a = i++;
+              while (part(input[i])) i++;
+              var word = input.slice(a, i);
+              tokens.push({
+                kind: tokenKinds[word] || "IDENT",
+                lexeme: word,
+                keyword: keywordKinds.has(word),
+              });
+              continue;
+            }
+            if (digit(c)) {
+              var n = i++;
+              while (digit(input[i])) i++;
+              tokens.push({ kind: "INT", lexeme: input.slice(n, i) });
+              continue;
+            }
+            if (c === '"') {
+              var s = i++;
+              while (i < input.length && input[i] !== '"') i++;
+              if (i < input.length) i++;
+              tokens.push({ kind: "STRING", lexeme: input.slice(s, i) });
+              continue;
+            }
+            var pair = input.slice(i, i + 2);
+            if (["==", "!=", "<=", ">=", "&&", "||"].includes(pair)) {
+              tokens.push({ kind: pair, lexeme: pair });
+              i += 2;
+              continue;
+            }
+            if ("=+-*/%!<>(){},;".includes(c)) {
+              tokens.push({ kind: c, lexeme: c });
+              i++;
+              continue;
+            }
+            tokens.push({ kind: "ILLEGAL", lexeme: c });
+            i++;
+          }
+          return tokens;
+        }
+        var input = document.getElementById("token-input"),
+          output = document.getElementById("token-output");
+        function render() {
+          output.innerHTML = "";
+          tokenize(input.value).forEach(function (item) {
+            var span = document.createElement("span");
+            span.className = "token" + (item.keyword ? " keyword" : "");
+            span.innerHTML =
+              "<b>" +
+              esc(item.kind) +
+              "</b><span>" +
+              esc('"' + item.lexeme + '"') +
+              "</span>";
+            output.appendChild(span);
+          });
+        }
+        input.addEventListener("input", render);
+        render();
+        var navLinks = Array.from(document.querySelectorAll("nav a"));
+        var observed = navLinks
+          .map(function (a) {
+            return document.querySelector(a.getAttribute("href"));
+          })
+          .filter(Boolean);
+        if ("IntersectionObserver" in window) {
+          var navObserver = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting) {
+                  navLinks.forEach(function (a) {
+                    a.classList.toggle(
+                      "active",
+                      a.getAttribute("href") === "#" + entry.target.id
+                    );
+                  });
+                }
+              });
+            },
+            { rootMargin: "-20% 0px -70% 0px" }
+          );
+          observed.forEach(function (section) {
+            navObserver.observe(section);
+          });
+          var pipes = Array.from(document.querySelectorAll(".pipe-stage"));
+          var pipeObserver = new IntersectionObserver(
+            function (entries) {
+              entries.forEach(function (entry) {
+                if (entry.isIntersecting)
+                  pipes.forEach(function (pipe) {
+                    pipe.classList.toggle(
+                      "active",
+                      pipe.dataset.target === entry.target.id
+                    );
+                  });
+              });
+            },
+            { rootMargin: "-30% 0px -60% 0px" }
+          );
+          pipes.forEach(function (pipe) {
+            var target = document.getElementById(pipe.dataset.target);
+            if (target) pipeObserver.observe(target);
+          });
+        }
+      })();
+    </script>
+  </body>
 </html>

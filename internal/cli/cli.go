@@ -5,6 +5,7 @@ package cli
 import (
 	"bufio"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -21,11 +22,11 @@ import (
 // RunCompiler executes one nuru-compiler invocation and returns its exit code.
 func RunCompiler(args []string) int {
 	if len(args) == 0 {
-		printCompilerHelp()
+		printCompilerHelp(os.Stdout)
 		return 0
 	}
 	if isHelp(args[0]) {
-		printCompilerHelp()
+		printCompilerHelp(os.Stdout)
 		return 0
 	}
 
@@ -48,7 +49,7 @@ func RunCompiler(args []string) int {
 		input, output, unrecognized := parseOutputArgs(args, func(string) string { return "nuru.out" })
 		if input == "" {
 			fmt.Println("Error: missing input file to compile")
-			printCompilerHelp()
+			printCompilerHelp(os.Stdout)
 			return 1
 		}
 		warnUnrecognized(unrecognized)
@@ -63,7 +64,7 @@ func RunInterpreter(args []string) int {
 		return 0
 	}
 	if isHelp(args[0]) {
-		printInterpreterHelp()
+		printInterpreterHelp(os.Stdout)
 		return 0
 	}
 
@@ -277,22 +278,86 @@ func runREPL() {
 	}
 }
 
-func printCompilerHelp() {
-	fmt.Println("Nuru Compiler (Workshop Edition)")
-	fmt.Println("\nUsage:")
-	fmt.Println("  nuru-compiler [-o binary] <file.nuru>   Compile to a native executable (default: ./nuru.out)")
-	fmt.Println("  nuru-compiler tokens <file.nuru>        Inspect Lexer token stream")
-	fmt.Println("  nuru-compiler ast <file.nuru>           Inspect Parser AST tree")
-	fmt.Println("  nuru-compiler transpile [-o out.go] <f> Transpile to Go (default: ./<input-basename>.go)")
-	fmt.Println("  nuru-compiler -h, --help                Show help message")
+func printCompilerHelp(w io.Writer) {
+	name := filepath.Base(os.Args[0])
+	fmt.Fprintf(w, `%s(1)
+
+NAME
+    %s - inspect, transpile, and build Nuru programs
+
+SYNOPSIS
+    %s [-o BINARY] FILE
+    %s tokens FILE
+    %s ast FILE
+    %s transpile [-o GO-FILE] FILE
+    %s (-h | --help)
+
+DESCRIPTION
+    Compiles a Nuru source file to a native executable by default. The same
+    command can expose intermediate compiler stages or emit Go source.
+
+COMMANDS
+    FILE
+        Build FILE as a native executable. This is the default operation.
+
+    tokens FILE, lex FILE
+        Print the tokens produced by the lexer. "lex" is an alias for "tokens".
+
+    ast FILE, parse FILE
+        Print the syntax tree produced by the parser. "parse" is an alias for
+        "ast".
+
+    transpile [-o GO-FILE] FILE
+        Write generated Go source. The default output is <input-basename>.go.
+
+OPTIONS
+    -o PATH
+        Set the generated Go file or executable path. The default executable is
+        ./nuru.out.
+
+    -h, --help
+        Print this help page and exit.
+`, name, name, name, name, name, name, name)
 }
 
-func printInterpreterHelp() {
-	fmt.Println("Nuru Interpreter (Workshop Edition)")
-	fmt.Println("\nUsage:")
-	fmt.Println("  nuru-interpreter <file.nuru>         Run file using interpreter (default)")
-	fmt.Println("  nuru-interpreter tokens <file.nuru>  Inspect Lexer token stream")
-	fmt.Println("  nuru-interpreter ast <file.nuru>     Inspect Parser AST tree")
-	fmt.Println("  nuru-interpreter repl                Start interactive REPL")
-	fmt.Println("  nuru-interpreter -h, --help          Show help message")
+func printInterpreterHelp(w io.Writer) {
+	name := filepath.Base(os.Args[0])
+	fmt.Fprintf(w, `%s(1)
+
+NAME
+    %s - inspect and directly execute Nuru programs
+
+SYNOPSIS
+    %s
+    %s FILE
+    %s tokens FILE
+    %s ast FILE
+    %s repl
+    %s (-h | --help)
+
+DESCRIPTION
+    Runs a Nuru source file directly. Invoking the interpreter without a file,
+    or with the repl command, starts an interactive read-eval-print loop.
+
+COMMANDS
+    FILE
+        Execute FILE directly.
+
+    tokens FILE, lex FILE
+        Print the tokens produced by the lexer. "lex" is an alias for "tokens".
+
+    ast FILE, parse FILE
+        Print the syntax tree produced by the parser. "parse" is an alias for
+        "ast".
+
+    repl
+        Start the interactive REPL.
+
+    (no arguments)
+        Start the interactive REPL.
+
+OPTIONS
+    -h, --help
+        Print this help page and exit.
+`, name, name, name, name, name, name, name, name)
 }

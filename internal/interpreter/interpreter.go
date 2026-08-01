@@ -3,19 +3,17 @@
 QUEST STAGE 3: THE LIVING ENGINE (Interpreter)
 ===============================================================================
 Overview:
-  Evaluate the AST dynamically by walking AST nodes and managing lexical environment
-  scopes. In this stage, you will implement execution logic for conditional branches,
-  variable environments, and function invocation call frames.
+  The interpreter is one consumer of the parser's AST. It walks nodes directly,
+  computes dynamically typed values, and stores variable bindings in nested
+  environments. No Go source or native executable is produced on this path.
+
+  This QUEST adds conditional execution, variable access, top-level function
+  registration, isolated call frames, argument binding, and return propagation.
 
 Tasks in this file:
-  - TASK [EVAL-01]: Implement evalIfStmt() for conditional branches.
-                    Uses isTruthy() and evalStmt().
-  - TASK [EVAL-02]: Implement evalVarDecl(), evalAssignStmt(), and evalIdentExpr()
-                    for environment variable storage and lookup.
-                    Uses env.Define(), env.Set(), env.Get().
-  - TASK [EVAL-03]: Implement evalFuncDecl(), evalCallExpr(), and evalReturnStmt()
-                    for function registration, call stack frames, and returns.
-                    Uses UserFunction, NewEnvironment(), and ReturnVal.
+  - TASK [EVAL-01]: Evaluate one conditional branch.
+  - TASK [EVAL-02]: Define, assign, and read variables.
+  - TASK [EVAL-03]: Register and call functions, including returns.
 
 Commands:
   - Run tests:  go test ./internal/interpreter
@@ -36,16 +34,19 @@ import (
 	"github.com/kc-clintone/compilers/internal/source"
 )
 
-// Environment holds variable bindings for a lexical scope.
+// Environment holds variable bindings for one lexical scope and optionally
+// links to the next outer scope.
 type Environment struct {
 	parent *Environment
 	values map[string]any
 }
 
+// NewEnvironment creates an empty scope whose unresolved names continue in parent.
 func NewEnvironment(parent *Environment) *Environment {
 	return &Environment{parent: parent, values: make(map[string]any)}
 }
 
+// Get returns the nearest binding for name, searching outward through parents.
 func (e *Environment) Get(name string) (any, bool) {
 	if v, ok := e.values[name]; ok {
 		return v, true
@@ -56,6 +57,8 @@ func (e *Environment) Get(name string) (any, bool) {
 	return nil, false
 }
 
+// Set updates the nearest existing binding for name. It reports false rather
+// than creating a new variable when the name is undefined in every scope.
 func (e *Environment) Set(name string, val any) bool {
 	if _, ok := e.values[name]; ok {
 		e.values[name] = val
@@ -67,6 +70,7 @@ func (e *Environment) Set(name string, val any) bool {
 	return false
 }
 
+// Define creates or replaces a binding in this environment only.
 func (e *Environment) Define(name string, val any) {
 	e.values[name] = val
 }
@@ -76,9 +80,13 @@ type UserFunction struct {
 	Decl *ast.FuncDecl
 }
 
-// Control flow signals
+// ReturnVal carries a function result through nested statement evaluation.
 type ReturnVal struct{ Value any }
+
+// BreakVal signals that the innermost loop should stop.
 type BreakVal struct{}
+
+// ContinueVal signals that the innermost loop should start its next iteration.
 type ContinueVal struct{}
 
 // Interpreter evaluates Nuru AST nodes.
@@ -88,6 +96,7 @@ type Interpreter struct {
 	diags []diagnostic.Diagnostic
 }
 
+// New creates an interpreter with an empty global environment and function table.
 func New() *Interpreter {
 	return &Interpreter{
 		env:   NewEnvironment(nil),
@@ -113,6 +122,7 @@ func (in *Interpreter) Interpret(prog *ast.Program) []diagnostic.Diagnostic {
 	return in.diags
 }
 
+// evalDecl dispatches a top-level declaration to its evaluator.
 func (in *Interpreter) evalDecl(decl ast.Decl) {
 	switch d := decl.(type) {
 	case *ast.FuncDecl:
@@ -124,20 +134,26 @@ func (in *Interpreter) evalDecl(decl ast.Decl) {
 	}
 }
 
-// TASK [EVAL-03]: Implement evalFuncDecl() to register user functions in in.funcs[d.Name].
-// Uses UserFunction{Decl: d}.
+// evalFuncDecl registers a top-level function declaration by name. Function
+// bodies run only when a later call expression invokes them.
+//
+// TASK [EVAL-03]: Store d in in.funcs using UserFunction and d.Name.
 // See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
 	in.error(d.GetSpan(), "function declarations are not evaluated in Stage 0/1/2")
 }
 
-// TASK [EVAL-02]: Implement evalVarDecl() to evaluate initializer and define variable in env.
-// Uses env.Define(d.Name, val).
+// evalVarDecl evaluates an optional initializer and defines the result in env;
+// declarations without initializers receive nil.
+//
+// TASK [EVAL-02]: Use in.evalExpr, d.Init, d.Name, and env.Define.
 // See HINT [EVAL-02-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
 	in.error(d.GetSpan(), "variable declarations are not evaluated in Stage 0/1/2")
 }
 
+// evalStmt evaluates one statement in env and returns a control-flow signal or
+// expression result when the statement produces one.
 func (in *Interpreter) evalStmt(stmt ast.Stmt, env *Environment) any {
 	if stmt == nil {
 		return nil
@@ -212,28 +228,37 @@ func (in *Interpreter) evalStmt(stmt ast.Stmt, env *Environment) any {
 	}
 }
 
-// TASK [EVAL-01]: Implement evalIfStmt() for conditional branches.
-// Uses isTruthy(condVal) and evalStmt().
+// evalIfStmt evaluates its condition once, then evaluates at most one branch in
+// the supplied environment and passes through that branch's result.
+//
+// TASK [EVAL-01]: Use in.evalExpr, isTruthy, in.evalStmt, s.Then, and s.Else.
 // See HINT [EVAL-01-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
 	in.error(s.GetSpan(), "conditional branch statements are not evaluated in Stage 0/1/2")
 	return nil
 }
 
-// TASK [EVAL-02]: Implement evalAssignStmt() to evaluate value and update env using env.Set(s.Name, val).
+// evalAssignStmt evaluates the new value and updates the nearest existing
+// binding, reporting a diagnostic when the variable is undefined.
+//
+// TASK [EVAL-02]: Use in.evalExpr, env.Set, in.error, s.Name, and s.GetSpan.
 // See HINT [EVAL-02-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
 	in.error(s.GetSpan(), "variable assignments are not evaluated in Stage 0/1/2")
 	return nil
 }
 
-// TASK [EVAL-03]: Implement evalReturnStmt() to return ReturnVal{Value: val}.
+// evalReturnStmt evaluates an optional return value and wraps it in ReturnVal so
+// nested blocks can propagate it to the function call.
+//
+// TASK [EVAL-03]: Use in.evalExpr, s.Value, and ReturnVal.
 // See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
 	in.error(s.GetSpan(), "return statements are not evaluated in Stage 0/1/2")
 	return nil
 }
 
+// evalExpr evaluates a value-producing AST node in env.
 func (in *Interpreter) evalExpr(expr ast.Expr, env *Environment) any {
 	if expr == nil {
 		return nil
@@ -273,6 +298,7 @@ func (in *Interpreter) evalExpr(expr ast.Expr, env *Environment) any {
 	}
 }
 
+// evalBinaryOp applies a Nuru binary operator to already evaluated operands.
 func (in *Interpreter) evalBinaryOp(e *ast.BinaryExpr, left, right any) any {
 	switch e.Op {
 	case "+":
@@ -339,25 +365,35 @@ func (in *Interpreter) evalBinaryOp(e *ast.BinaryExpr, left, right any) any {
 	return nil
 }
 
-// TASK [EVAL-02]: Implement evalIdentExpr() to look up variable value using env.Get(e.Name).
+// evalIdentExpr returns the nearest value bound to the identifier or reports an
+// undefined-variable diagnostic.
+//
+// TASK [EVAL-02]: Use env.Get, in.error, e.Name, and e.GetSpan.
 // See HINT [EVAL-02-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
 	in.error(e.GetSpan(), fmt.Sprintf("undefined variable '%s'", e.Name))
 	return nil
 }
 
-// TASK [EVAL-03]: Implement evalCallExpr() to look up user function, create argument environment, and execute body.
-// Uses NewEnvironment(), evalStmt(), and ReturnVal.
+// evalCallExpr resolves a registered function, validates arity, evaluates each
+// argument in the caller, binds parameters in a fresh call environment, runs
+// the body, and unwraps ReturnVal.
+//
+// TASK [EVAL-03]: Use in.funcs, NewEnvironment, in.env, in.evalExpr,
+// callEnv.Define, in.evalStmt, ReturnVal, and in.error.
 // See HINT [EVAL-03-HINT] at the bottom of this file for details.
 func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
 	in.error(e.GetSpan(), fmt.Sprintf("undefined function '%s'", e.Callee))
 	return nil
 }
 
+// error records an interpreter diagnostic at span.
 func (in *Interpreter) error(span source.Span, msg string) {
 	in.diags = append(in.diags, diagnostic.Diagnostic{Span: span, Phase: "interpreter", Message: msg})
 }
 
+// isTruthy implements Nuru truthiness: nil, false, and numeric zero are false;
+// every other value is true.
 func isTruthy(v any) bool {
 	if v == nil {
 		return false
@@ -371,6 +407,7 @@ func isTruthy(v any) bool {
 	return true
 }
 
+// toInt converts the integer representations used by the parser and runtime.
 func toInt(v any) (int, bool) {
 	if n, ok := v.(int); ok {
 		return n, true
@@ -381,6 +418,7 @@ func toInt(v any) (int, bool) {
 	return 0, false
 }
 
+// toIntPair converts both operands and succeeds only when both are integers.
 func toIntPair(l, r any) (int, int, bool) {
 	li, ok1 := toInt(l)
 	ri, ok2 := toInt(r)
@@ -389,84 +427,44 @@ func toIntPair(l, r any) (int, int, bool) {
 
 /*
 ===============================================================================
-QUEST HINTS & SOLUTIONS
+QUEST HINTS
 ===============================================================================
 HINT [EVAL-01-HINT]:
-  Implement evalIfStmt:
-    func (in *Interpreter) evalIfStmt(s *ast.IfStmt, env *Environment) any {
-        condVal := in.evalExpr(s.Cond, env)
-        if isTruthy(condVal) {
-            return in.evalStmt(s.Then, env)
-        } else if s.Else != nil {
-            return in.evalStmt(s.Else, env)
-        }
-        return nil
-    }
+  1. Evaluate s.Cond once in env.
+  2. If the result is truthy, evaluate and return s.Then.
+  3. Otherwise, evaluate and return s.Else when it exists.
+  4. Return nil when no branch runs.
 
 HINT [EVAL-02-HINT]:
-  Implement evalVarDecl, evalAssignStmt, and evalIdentExpr:
-    func (in *Interpreter) evalVarDecl(d *ast.VarDecl, env *Environment) {
-        var val any
-        if d.Init != nil {
-            val = in.evalExpr(d.Init, env)
-        }
-        env.Define(d.Name, val)
-    }
+  Declaration:
+  1. Start with a nil value and evaluate d.Init only when it exists.
+  2. Define d.Name in the current environment with that value.
 
-    func (in *Interpreter) evalAssignStmt(s *ast.AssignStmt, env *Environment) any {
-        val := in.evalExpr(s.Value, env)
-        if !env.Set(s.Name, val) {
-            in.error(s.GetSpan(), fmt.Sprintf("cannot assign to undefined variable '%s'", s.Name))
-        }
-        return nil
-    }
+  Assignment:
+  1. Evaluate s.Value before changing the environment.
+  2. Ask env.Set to update the nearest binding.
+  3. If it returns false, record an undefined-assignment diagnostic.
+  4. Return nil after handling the statement.
 
-    func (in *Interpreter) evalIdentExpr(e *ast.IdentExpr, env *Environment) any {
-        val, ok := env.Get(e.Name)
-        if !ok {
-            in.error(e.GetSpan(), fmt.Sprintf("undefined variable '%s'", e.Name))
-            return nil
-        }
-        return val
-    }
+  Identifier:
+  1. Ask env.Get for e.Name.
+  2. Return the value when found; otherwise report an undefined-variable
+     diagnostic and return nil.
 
 HINT [EVAL-03-HINT]:
-  Implement evalFuncDecl, evalCallExpr, and evalReturnStmt:
-    func (in *Interpreter) evalFuncDecl(d *ast.FuncDecl, env *Environment) {
-        in.funcs[d.Name] = &UserFunction{Decl: d}
-    }
+  Function declaration:
+  1. Wrap d in UserFunction and store it under d.Name in the function table.
 
-    func (in *Interpreter) evalReturnStmt(s *ast.ReturnStmt, env *Environment) any {
-        var val any
-        if s.Value != nil {
-            val = in.evalExpr(s.Value, env)
-        }
-        return ReturnVal{Value: val}
-    }
+  Return:
+  1. Start with nil and evaluate s.Value only when present.
+  2. Wrap the result in ReturnVal so blocks do not mistake it for a normal value.
 
-    func (in *Interpreter) evalCallExpr(e *ast.CallExpr, env *Environment) any {
-        fn, ok := in.funcs[e.Callee]
-        if !ok {
-            in.error(e.GetSpan(), fmt.Sprintf("undefined function '%s'", e.Callee))
-            return nil
-        }
-
-        if len(e.Args) != len(fn.Decl.Params) {
-            in.error(e.GetSpan(), fmt.Sprintf("function '%s' expects %d arguments, got %d", e.Callee, len(fn.Decl.Params), len(e.Args)))
-            return nil
-        }
-
-        callEnv := NewEnvironment(in.env)
-        for i, argExpr := range e.Args {
-            argVal := in.evalExpr(argExpr, env)
-            callEnv.Define(fn.Decl.Params[i], argVal)
-        }
-
-        res := in.evalStmt(fn.Decl.Body, callEnv)
-        if ret, isRet := res.(ReturnVal); isRet {
-            return ret.Value
-        }
-        return nil
-    }
+  Function call:
+  1. Find e.Callee in the function table; diagnose an unknown function.
+  2. Compare argument and parameter counts; diagnose a mismatch before running.
+  3. Create a fresh environment whose parent is the interpreter's global env.
+  4. Evaluate arguments in the caller's env and bind them to parameters by index.
+  5. Evaluate the function body in the call environment.
+  6. Unwrap ReturnVal when present; otherwise return nil.
 ===============================================================================
 */

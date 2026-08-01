@@ -3,11 +3,14 @@
 QUEST STAGE 1: THE LEXICAL CONDUIT (Token Vocabulary)
 ===============================================================================
 Overview:
-  Define the lexical vocabulary tokens for variable and function declarations.
+  Token kinds are the shared vocabulary between the lexer and parser. The lexer
+  emits them; the parser uses them to decide which grammar rule to apply.
+
+  This part of the lexer QUEST adds the reserved spellings that introduce
+  variable and function declarations.
 
 Tasks in this file:
-  - TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds and add them
-                   to the Keywords map.
+  - TASK [LEX-03]: Define and register the var and func keyword kinds.
 
 Commands:
   - Run tests:  go test ./internal/token ./internal/lexer
@@ -64,11 +67,9 @@ const (
 	True     Kind = "true"
 	False    Kind = "false"
 
-	// TASK [LEX-03]: Define Var ("var") and Func ("func") token kinds here for Stage 1!
+	// TASK [LEX-03]: Define Var and Func kinds using their Nuru source spellings.
+	// Then register both constants in Keywords below.
 	// See HINT [LEX-03-HINT] at the bottom of this file for details.
-	// Example:
-	// Var  Kind = "var"
-	// Func Kind = "func"
 )
 
 // Token contains a scanned token's kind, literal representation, source text, and span.
@@ -79,6 +80,7 @@ type Token struct {
 	Span    source.Span
 }
 
+// String formats a token as one row of the token-inspection table.
 func (t Token) String() string {
 	if t.Literal != nil {
 		return fmt.Sprintf("%-12s %-10s %-12v %s", t.Span.Start, t.Kind, t.Literal, t.Lexeme)
@@ -95,8 +97,7 @@ func PrintTokens(tokens []Token) {
 	}
 }
 
-// Keywords maps reserved keywords to token kinds.
-// TASK [LEX-03]: Add "var": Var and "func": Func to the Keywords map below for Stage 1!
+// Keywords maps reserved source spellings to the kinds emitted by identifier.
 var Keywords = map[string]Kind{
 	"if":       If,
 	"else":     Else,
@@ -105,21 +106,18 @@ var Keywords = map[string]Kind{
 	"continue": Continue,
 	"true":     True,
 	"false":    False,
-	// "var":  Var,
-	// "func": Func,
+	// TASK [LEX-03]: Register the "var" and "func" spellings here.
 }
 
 /*
 ===============================================================================
-QUEST HINTS & SOLUTIONS
+QUEST HINTS
 ===============================================================================
 HINT [LEX-03-HINT]:
-  Define the Var and Func token constants:
-    Var  Kind = "var"
-    Func Kind = "func"
-
-  Then add them to the Keywords map:
-    "var":  Var,
-    "func": Func,
+  1. Add two Kind constants beside the existing control-keyword constants.
+  2. Give each constant the same lowercase spelling used in Nuru source.
+  3. Add one Keywords entry from each source spelling to its new constant.
+  4. Keep the constant names and map values linked rather than constructing
+     token.Kind values at each parser call site.
 ===============================================================================
 */
